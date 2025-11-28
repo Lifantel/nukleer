@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const housesGrid = document.getElementById('houses-grid');
     
     // Göstergeler
+    const fuelStatus = document.getElementById('fuel-status'); // Yeni eklendi
     const tempBar = document.getElementById('temp-bar');
     const tempVal = document.getElementById('temp-val');
     const powerDisplay = document.getElementById('power-digital');
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const POWER_FACTOR = 2.2; 
     const MAX_TEMP_FROM_RODS = 1800; 
 
-    // Yeni: Kazanmak için Gerekli Kritik Denge Pozisyonları
+    // Kazanmak için Gerekli Kritik Denge Pozisyonları
     const TARGET_RODS = {
         R1_MIN: 20, R1_MAX: 30, // Rod A
         R2_MIN: 50, R2_MAX: 60, // Rod B
@@ -81,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameContainer.style.display = 'block';
         initCity();
         
+        fuelStatus.innerText = `YAKIT: ${fuel.toUpperCase()}`; // Yakıt durumunu güncelle
         log(`Yakıt yüklendi: ${fuel.toUpperCase()}. Sistem Aktif.`);
         log("Göreviniz: Kritik denge noktasına ulaşın ve 1500 MW gücü güvenle sağlayın.");
         
@@ -102,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Dengesizlik ve Hedefe Yakınlık Kontrolü
         const maxRod = Math.max(...rodValues);
         const minRod = Math.min(...rodValues);
-        const genericInstabilityFactor = (maxRod - minRod) / 100; // Normalde cezalandırılan dengesizlik
+        const genericInstabilityFactor = (maxRod - minRod) / 100; 
         
         // KRİTİK DENGE KONTROLÜ
         const targetProximity = (
@@ -114,8 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let effectiveInstabilityFactor = genericInstabilityFactor;
         
         if (targetProximity) {
-            // Eğer KRİTİK DENGE noktasındaysak, etkili dengesizliği minimuma çek.
-            // Bu, yüksek güce çıkarken erimeyi engeller.
             effectiveInstabilityFactor = 0.05; 
             if (gameState.power > 1000) {
                  if(warningCount % 100 === 0) log("KRİTİK DENGE KONUMU! Optimum sıcaklık kontrolü sağlandı.", false); 
@@ -124,10 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 2. Yeni Sıcaklık Hedefi (Target Temperature)
         let baseTargetTemp = 25 + (avgOpenness * MAX_TEMP_FROM_RODS * multiplier);
-        
-        // HotspotBoost'u Etkili Dengesizlik Faktörüne göre hesapla
         let hotspotBoost = effectiveInstabilityFactor * 300 * multiplier; 
-        
         let targetTemp = baseTargetTemp + hotspotBoost;
 
         // 3. Sıcaklık Değişimi
@@ -141,10 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 4. Güç Üretimi (Power Output)
         if (gameState.temp > 300) {
             let basePower = (gameState.temp - 300) * POWER_FACTOR;
-            
-            // Verim cezasını da Etkili Dengesizlik Faktörüne göre hesapla
             let efficiencyPenalty = 1 - (effectiveInstabilityFactor * 0.25); 
-            
             gameState.power = Math.floor(basePower * efficiencyPenalty);
         } else {
             gameState.power = 0;
@@ -164,8 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sıcaklık Barı
         let tempPct = (gameState.temp / MELTDOWN_TEMP) * 100;
         tempBar.style.width = `${Math.min(tempPct, 100)}%`;
-        tempVal.innerText = `${Math.floor(gameState.temp)}°C`;
-
+        tempVal.innerText = `${Math.floor(gameState.temp)}°C`; // Hata alınan satır burası olabilir.
+        
         if (gameState.temp < 800) tempBar.style.backgroundColor = "#00cc66"; 
         else if (gameState.temp < 1100) tempBar.style.backgroundColor = "#ffcc00"; 
         else tempBar.style.backgroundColor = "#ff0000"; 
