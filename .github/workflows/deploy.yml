@@ -1,16 +1,20 @@
-name: Deploy static site to GitHub Pages
+name: Deploy Nuke Game to GitHub Pages
 
 on:
+  # 'main' dalına her push yapıldığında çalışır
   push:
     branches:
       - main
+  # GitHub arayüzünden manuel olarak tetiklemeye izin verir
   workflow_dispatch:
 
+# Gerekli izinlerin ayarlanması
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Aynı anda birden fazla deploy işlemi olursa çakışmayı önler
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -22,15 +26,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      # 1. Kodları depodan çeker
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. GitHub Pages yapılandırmasını ayarlar
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      # 3. Dosyaları yükler (HTML, CSS, JS ve Resimler)
       - name: Upload static files
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./
+          # index.html dosyanız ana dizinde olduğu için '.' kullanıyoruz
+          path: '.'
 
+      # 4. Yayına alır
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
