@@ -1,209 +1,211 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Element Seçimleri ---
+    // --- Elementler ---
     const selectionScreen = document.getElementById('selection-screen');
+    const endScreen = document.getElementById('end-screen');
     const gameContainer = document.getElementById('game-container');
-    const uraniumBtn = document.getElementById('uraniumBtn');
-    const plutoniumBtn = document.getElementById('plutoniumBtn');
-    const modal = document.getElementById('infoModal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalText = document.getElementById('modal-text');
-    const closeBtn = document.querySelector('.close-btn');
     const logContent = document.getElementById('log-content');
+    const housesGrid = document.getElementById('houses-grid');
     
-    // Simülasyon Elementleri
-    const fuelStatus = document.getElementById('fuel-status');
-    const systemStatus = document.getElementById('system-status');
+    // Göstergeler
     const tempBar = document.getElementById('temp-bar');
     const tempVal = document.getElementById('temp-val');
-    const powerBar = document.getElementById('power-bar');
-    const powerVal = document.getElementById('power-val');
-    const controlRodInput = document.getElementById('control-rods');
+    const powerDisplay = document.getElementById('power-digital');
+    const gridPercentage = document.getElementById('grid-percentage');
+
+    // Kontroller
+    const rod1 = document.getElementById('rod1');
+    const rod2 = document.getElementById('rod2');
+    const rod3 = document.getElementById('rod3');
+    const rodDisplays = [document.getElementById('val-rod1'), document.getElementById('val-rod2'), document.getElementById('val-rod3')];
     const scramBtn = document.getElementById('scram-btn');
 
-    // --- Değişkenler ---
-    let selectedFuel = '';
-    let simulationActive = false;
-    let coreTemp = 25; // Başlangıç sıcaklığı
-    let powerOutput = 0;
-    let controlRodLevel = 100; // %100 = Tam kapalı (reaksiyon yok)
-    let meltdownThreshold = 1200; // Tehlike sınırı
-
-    // --- Veri Tabanı (Geliştirilmiş) ---
-    const infoData = {
-        "sogutma": {
-            title: "Doğal Çekişli Soğutma Kuleleri",
-            text: "Bu hiperbolik yapılar santralin en ikonik parçalarıdır. <br><br><strong>Görevi:</strong> Türbinlerden çıkan sıcak suyu, hava akımıyla soğutarak tekrar sisteme kazandırmaktır. <br><strong>Bilgi:</strong> Kulelerin tepesinden çıkan beyaz bulut duman değil, temiz su buharıdır. Radyasyon içermez."
-        },
-        "reaktor": {
-            title: "Reaktör Binası (Containment)",
-            text: "Güçlendirilmiş beton ve çelikten yapılmış bu kubbe, santralin kalbidir.",
-            uranium: "<strong>Uranyum-235:</strong> Şu an hafif su reaktöründe zenginleştirilmiş uranyum kullanıyorsunuz. Nötronlar uranyum atomlarına çarparak fisyon (bölünme) yaratır ve muazzam ısı açığa çıkar.",
-            plutonium: "<strong>Plütonyum-239:</strong> MOX (Karışık Oksit) yakıtı veya hızlı üretken reaktör teknolojisi kullanıyorsunuz. Plütonyum fisyonu daha yüksek enerji yoğunluğuna sahiptir ancak kontrolü daha hassas süreçler gerektirebilir."
-        },
-        "turbin": {
-            title: "Türbin ve Jeneratör Salonu",
-            text: "Reaktörde üretilen ısı suyu buhara dönüştürür. Yüksek basınçlı buhar bu binaya gelir. <br><br><strong>İşleyiş:</strong> Buhar, dev pervaneleri (türbinleri) dakikada 3000 devirle döndürür. Bu mekanik hareket, jeneratörde elektriğe dönüşür."
-        },
-        "guvenlik": {
-            title: "Şalt Sahası ve Güvenlik Sistemleri",
-            text: "Üretilen elektrik burada voltajı yükseltilerek şehirlere gönderilir. Ayrıca santralin acil durum dizel jeneratörleri de genellikle bu bölgelere yakın konumlandırılır; şebeke elektriği kesilse bile soğutma pompalarını çalıştırırlar."
-        }
+    // --- Oyun Değişkenleri ---
+    let gameState = {
+        active: false,
+        fuel: 'uranium',
+        temp: 25,
+        power: 0,
+        rods: [100, 100, 100], // 3 çubuk
+        housesLit: 0,
+        gameOver: false
     };
 
-    // --- Fonksiyonlar ---
+    const TOTAL_HOUSES = 10;
+    const MAX_POWER = 1600; // Kazanmak için gereken max güç civarı
+    const MELTDOWN_TEMP = 1200;
 
-    function log(message) {
-        const p = document.createElement('p');
-        p.className = 'log-entry';
-        const time = new Date().toLocaleTimeString();
-        p.innerText = `[${time}] ${message}`;
-        logContent.prepend(p); // En üste ekle
-        
-        // Log çok şişmesin
-        if (logContent.children.length > 20) {
-            logContent.lastChild.remove();
+    // Şehri Kur
+    function initCity() {
+        housesGrid.innerHTML = '';
+        for(let i=0; i<TOTAL_HOUSES; i++) {
+            const house = document.createElement('div');
+            house.classList.add('house');
+            house.id = `house-${i}`;
+            housesGrid.appendChild(house);
         }
     }
 
-    function startGame(fuel) {
-        selectedFuel = fuel;
+    // Log Yazdırma
+    function log(msg) {
+        const p = document.createElement('p');
+        p.innerText = `> ${msg}`;
+        logContent.prepend(p);
+        if (logContent.children.length > 15) logContent.lastChild.remove();
+    }
+
+    // Oyunu Başlat
+    window.startGame = (fuel) => {
+        gameState.fuel = fuel;
+        gameState.active = true;
         selectionScreen.classList.remove('active');
         gameContainer.style.display = 'block';
+        initCity();
         
-        fuelStatus.innerText = `Yakıt: ${fuel === 'uranium' ? 'Uranyum-235' : 'Plütonyum-239'}`;
-        systemStatus.innerText = "Sistem: AKTİF";
-        systemStatus.style.color = "#00ff00";
+        log(`Yakıt yüklendi: ${fuel.toUpperCase()}`);
+        log("Türbinler dönmeye hazır.");
+        log("HEDEF: 3 Çubuğu kontrol ederek 1500 MW güce ulaş.");
         
-        log(`Sistem başlatıldı. Yakıt türü: ${fuel.toUpperCase()}.`);
-        log("Soğutma pompaları devrede.");
-        log("Operatör kontrolü bekleniyor. Kontrol çubuklarını çekin.");
-        
-        simulationActive = true;
         gameLoop();
-    }
+    };
 
-    // Simülasyon Döngüsü (Her 500ms'de bir çalışır)
+    document.getElementById('uraniumBtn').addEventListener('click', () => window.startGame('uranium'));
+    document.getElementById('plutoniumBtn').addEventListener('click', () => window.startGame('plutonium'));
+
+    // --- Simülasyon Döngüsü ---
     function gameLoop() {
-        if (!simulationActive) return;
+        if (!gameState.active || gameState.gameOver) return;
 
-        // Mantık: Çubuklar (Rod) ne kadar yukarıda ise (%0), reaksiyon o kadar artar.
-        // Rod Level 100 = Kapalı, Rod Level 0 = Tam açık.
-        const reactivity = (100 - controlRodLevel) / 100; // 0.0 ile 1.0 arası
+        // 1. Reaktivite Hesabı (3 çubuğun ortalaması)
+        // 100 = Kapalı, 0 = Tam açık
+        let totalRodOpenness = 0;
+        gameState.rods.forEach(val => totalRodOpenness += (100 - val));
+        let avgOpenness = totalRodOpenness / 3;
+
+        // Yakıt çarpanı
+        let multiplier = gameState.fuel === 'plutonium' ? 1.5 : 1.0;
+
+        // 2. Sıcaklık Değişimi
+        // Çubuklar açıksa ısınılır, kapalıysa soğunur
+        let targetTemp = 25 + (avgOpenness * 15 * multiplier); 
         
-        // Isınma Formülü
-        let targetTemp = 25 + (reactivity * 1500); // Max 1525 derece hedefler
-        
-        // Sıcaklığın yavaşça hedefe gitmesi (Simülasyon hissi)
-        if (coreTemp < targetTemp) {
-            coreTemp += (Math.random() * 10) + 5; 
-        } else if (coreTemp > targetTemp) {
-            coreTemp -= (Math.random() * 10) + 5;
-        }
+        // Isınma/Soğuma hızı (Plütonyum daha hızlı ısınır)
+        let changeRate = (targetTemp - gameState.temp) * 0.05;
+        gameState.temp += changeRate;
 
-        // Alt sınır kontrolü
-        if (coreTemp < 25) coreTemp = 25;
+        // Rastgele dalgalanma (Çubuklar dengesizse artar)
+        let instability = Math.abs(gameState.rods[0] - gameState.rods[2]) / 100;
+        gameState.temp += (Math.random() - 0.5) * (instability * 20);
 
-        // Güç Üretimi (Sıcaklığa bağlı ama gecikmeli)
-        // Sıcaklık 300'ü geçince buhar oluşur ve güç üretimi başlar
-        if (coreTemp > 300) {
-            powerOutput = Math.floor((coreTemp - 300) * 1.2); 
+        if (gameState.temp < 25) gameState.temp = 25;
+
+        // 3. Güç Üretimi (300 dereceden sonra başlar)
+        if (gameState.temp > 300) {
+            gameState.power = Math.floor((gameState.temp - 300) * 1.5);
         } else {
-            powerOutput = 0;
+            gameState.power = 0;
         }
 
-        updateDashboard();
-        checkSafety();
+        updateUI();
+        checkGameStatus();
 
-        requestAnimationFrame(() => {
-            setTimeout(gameLoop, 200); // Hızı ayarlar
-        });
+        requestAnimationFrame(gameLoop);
     }
 
-    function updateDashboard() {
+    function updateUI() {
         // Sıcaklık Barı
-        const tempPercent = Math.min((coreTemp / 1500) * 100, 100);
-        tempBar.style.width = `${tempPercent}%`;
-        tempVal.innerText = `${Math.floor(coreTemp)}°C`;
-        
-        // Renk Değişimi
-        if (coreTemp < 800) tempBar.style.backgroundColor = "#00cc66"; // Yeşil
-        else if (coreTemp < 1100) tempBar.style.backgroundColor = "#ffcc00"; // Sarı
-        else tempBar.style.backgroundColor = "#ff0000"; // Kırmızı
+        let tempPct = (gameState.temp / MELTDOWN_TEMP) * 100;
+        tempBar.style.width = `${Math.min(tempPct, 100)}%`;
+        tempVal.innerText = `${Math.floor(gameState.temp)}°C`;
 
-        // Güç Barı
-        const powerPercent = Math.min((powerOutput / 1500) * 100, 100);
-        powerBar.style.width = `${powerPercent}%`;
-        powerVal.innerText = `${powerOutput} MW`;
+        // Güç Göstergesi
+        powerDisplay.innerText = `${gameState.power} MW`;
+
+        // Şehir Işıkları Mantığı
+        // Her 150 MW bir evi yakar
+        let litCount = Math.floor(gameState.power / 150);
+        if (litCount > TOTAL_HOUSES) litCount = TOTAL_HOUSES;
+        gameState.housesLit = litCount;
+
+        // Evleri görsel olarak güncelle
+        for (let i = 0; i < TOTAL_HOUSES; i++) {
+            const house = document.getElementById(`house-${i}`);
+            if (i < litCount) house.classList.add('lit');
+            else house.classList.remove('lit');
+        }
+
+        gridPercentage.innerText = `${(litCount / TOTAL_HOUSES) * 100}%`;
     }
 
-    function checkSafety() {
-        if (coreTemp > 1000 && Math.random() > 0.95) {
-            log("UYARI: Çekirdek sıcaklığı yükseliyor!");
+    function checkGameStatus() {
+        // Kaybetme Koşulu: Erime
+        if (gameState.temp >= MELTDOWN_TEMP) {
+            endGame(false, "ÇEKİRDEK ERİMESİ! Santral patladı ve şehir radyasyona maruz kaldı.");
         }
-        if (coreTemp >= meltdownThreshold) {
-            alert("KRİTİK HATA: ÇEKİRDEK ERİMESİ BAŞLADI! SİSTEM KAPATILIYOR.");
-            scram();
+
+        // Kazanma Koşulu: Tüm evler yandı
+        if (gameState.housesLit === TOTAL_HOUSES) {
+            // Hemen kazanmak yerine 1 saniye bekletilebilir ama basitlik için hemen bitirelim
+            endGame(true, "TEBRİKLER! Şehrin tüm enerji ihtiyacını güvenle karşıladınız.");
         }
     }
 
-    function scram() {
-        controlRodInput.value = 100;
-        controlRodLevel = 100;
-        log("!!! SCRAM TETİKLENDİ !!!");
-        log("Kontrol çubukları yerçekimi ile düşürüldü.");
-        log("Reaksiyon durduruluyor...");
+    function endGame(victory, msg) {
+        gameState.gameOver = true;
+        gameState.active = false;
         
-        // Görsel efekt için butonu devre dışı bırak
-        scramBtn.disabled = true;
-        scramBtn.innerText = "SİSTEM KİLİTLENDİ";
-        scramBtn.style.backgroundColor = "#555";
-        scramBtn.style.animation = "none";
+        const title = document.getElementById('end-title');
+        const message = document.getElementById('end-message');
         
-        systemStatus.innerText = "Sistem: ACİL DURDURULDU";
-        systemStatus.style.color = "red";
+        endScreen.classList.add('active');
+        title.innerText = victory ? "GÖREV BAŞARILI" : "KRİTİK HATA";
+        title.style.color = victory ? "green" : "red";
+        message.innerText = msg;
     }
 
-    // --- Olay Dinleyicileri ---
-
-    uraniumBtn.addEventListener('click', () => startGame('uranium'));
-    plutoniumBtn.addEventListener('click', () => startGame('plutonium'));
-
-    // Kontrol Çubuğu Hareketi
-    controlRodInput.addEventListener('input', (e) => {
-        controlRodLevel = e.target.value;
-        if (controlRodLevel < 20) {
-            log("DİKKAT: Kontrol çubukları kritik seviyede çekildi.");
-        } else if (controlRodLevel > 80) {
-            log("Güç azaltılıyor...");
-        }
+    // SCRAM (Acil Durdurma)
+    scramBtn.addEventListener('click', () => {
+        rod1.value = 100; rod2.value = 100; rod3.value = 100;
+        updateRodInputs();
+        log("SCRAM tetiklendi! Tüm çubuklar kapatıldı.");
+        // Scram ile oyunu kaybetmezsiniz, sadece soğutursunuz, ama güç düşer.
     });
 
-    // SCRAM Butonu
-    scramBtn.addEventListener('click', scram);
+    // Slider Eventleri
+    function updateRodInputs() {
+        gameState.rods[0] = parseInt(rod1.value);
+        gameState.rods[1] = parseInt(rod2.value);
+        gameState.rods[2] = parseInt(rod3.value);
 
-    // Bilgi Noktaları (Geliştirilmiş seçim)
-    document.querySelectorAll('.info-point').forEach(point => {
-        point.addEventListener('click', () => {
-            const infoKey = point.getAttribute('data-info');
-            const data = infoData[infoKey];
-            
-            modalTitle.textContent = data.title;
-            let content = data.text;
-            
-            // Yakıta özel bilgi varsa ekle
-            if (selectedFuel === 'uranium' && data.uranium) {
-                content += "<br><br>" + data.uranium;
-            } else if (selectedFuel === 'plutonium' && data.plutonium) {
-                content += "<br><br>" + data.plutonium;
-            }
+        rodDisplays[0].innerText = gameState.rods[0] + '%';
+        rodDisplays[1].innerText = gameState.rods[1] + '%';
+        rodDisplays[2].innerText = gameState.rods[2] + '%';
+    }
 
-            modalText.innerHTML = content;
+    [rod1, rod2, rod3].forEach(rod => {
+        rod.addEventListener('input', updateRodInputs);
+    });
+    
+    // Bilgi Pop-up Kodları (Mevcut koddan devam)
+    const infoPoints = document.querySelectorAll('.info-point');
+    const modal = document.getElementById('infoModal');
+    const closeBtn = document.querySelector('.close-btn');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+
+    const infoData = {
+        "sogutma": { title: "Soğutma Kuleleri", text: "Su buharı çıkaran dev bacalar." },
+        "reaktor": { title: "Reaktör Binası", text: "Çekirdeğin bulunduğu korunaklı alan." },
+        "turbin": { title: "Türbin Odası", text: "Elektriğin üretildiği jeneratörlerin yeri." }
+    };
+
+    infoPoints.forEach(p => {
+        p.addEventListener('click', () => {
+            const key = p.getAttribute('data-info');
+            modalTitle.innerText = infoData[key].title;
+            modalText.innerText = infoData[key].text;
             modal.classList.add('active');
         });
     });
-
     closeBtn.addEventListener('click', () => modal.classList.remove('active'));
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('active');
-    });
+    window.onclick = (e) => { if(e.target == modal) modal.classList.remove('active'); };
 });
