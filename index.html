@@ -3,36 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İnteraktif Nükleer Santral</title>
+    <title>Nükleer Santral Operatör Simülatörü</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="selection-screen" class="modal-overlay active">
-        <div class="modal-content">
-            <h2>Bir Yakıt Türü Seçin</h2>
-            <p>Santralin hangi nükleer yakıtı kullandığını öğrenmek için seçin:</p>
+        <div class="modal-content text-center">
+            <h2>Operatör Girişi</h2>
+            <p>Vardiyaya başlamadan önce reaktör yakıt tipini seçin:</p>
             <div class="button-group">
-                <button id="uraniumBtn" class="choice-btn">Uranyum</button>
-                <button id="plutoniumBtn" class="choice-btn">Plütonyum</button>
+                <button id="uraniumBtn" class="choice-btn uranium">Uranyum-235</button>
+                <button id="plutoniumBtn" class="choice-btn plutonium">Plütonyum-239</button>
             </div>
         </div>
     </div>
 
     <div id="game-container">
-        <h1>Nükleer Santralin Bölümleri</h1>
-        <p>Bilgi almak için '?' işaretlerine tıklayın.</p>
+        <header>
+            <h1>Nükleer Santral Kontrol Sahası</h1>
+            <div class="status-bar">
+                <span id="fuel-status">Yakıt: Bekleniyor...</span> | 
+                <span id="system-status">Sistem: DEVRE DIŞI</span>
+            </div>
+        </header>
 
-        <div class="image-map-container">
-            <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Nükleer Santral Haritası">
+        <div class="main-display">
+            <div class="image-map-container">
+                <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Nükleer Santral Sahası">
 
-            <div class="info-point" data-info="k_kulesi" style="top: 40%; left: 30%;">?</div>
-            
-            <div class="info-point" data-info="r_binasi" style="top: 55%; left: 50%;">?</div>
-            
-            <div class="info-point" data-info="t_binasi" style="top: 60%; left: 65%;">?</div>
-            
-            <div class="info-point" data-info="s_sahasi" style="top: 70%; left: 85%;">?</div>
+                <div class="info-point" data-info="sogutma" style="top: 38%; left: 32%;">?</div>
+                <div class="info-point" data-info="reaktor" style="top: 58%; left: 45%;">?</div>
+                <div class="info-point" data-info="turbin" style="top: 62%; left: 58%;">?</div>
+                <div class="info-point" data-info="guvenlik" style="top: 75%; left: 80%;">?</div>
+            </div>
+
+            <div class="system-log">
+                <h3>Sistem Kayıtları</h3>
+                <div id="log-content">
+                    <p>> Sistem başlatılmayı bekliyor...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="control-panel">
+            <div class="gauge-container">
+                <div class="gauge">
+                    <label>Çekirdek Sıcaklığı (°C)</label>
+                    <div class="bar-bg"><div id="temp-bar" class="bar-fill" style="width: 0%;"></div></div>
+                    <span id="temp-val">25°C</span>
+                </div>
+                <div class="gauge">
+                    <label>Elektrik Üretimi (MW)</label>
+                    <div class="bar-bg"><div id="power-bar" class="bar-fill" style="width: 0%;"></div></div>
+                    <span id="power-val">0 MW</span>
+                </div>
+            </div>
+
+            <div class="controls-container">
+                <div class="control-group">
+                    <label for="control-rods">Kontrol Çubukları Seviyesi</label>
+                    <input type="range" id="control-rods" min="0" max="100" value="100">
+                    <p class="small-text">Çubuklar %100: Reaksiyon Durur | %0: Tam Güç</p>
+                </div>
+                
+                <button id="scram-btn" class="scram-btn">SCRAM (ACİL DURDURMA)</button>
+            </div>
         </div>
     </div>
 
@@ -40,7 +76,7 @@
         <div class="modal-content">
             <span class="close-btn">&times;</span>
             <h2 id="modal-title">Başlık</h2>
-            <p id="modal-text">Buraya bilgi metni gelecek.</p>
+            <div id="modal-text">İçerik...</div>
         </div>
     </div>
 
