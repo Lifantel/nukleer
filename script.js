@@ -30,9 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
         gameOver: false
     };
 
+    // --- Sabitler (Düzeltildi) ---
     const TOTAL_HOUSES = 10;
-    const MAX_POWER_IDEAL = 1600; // İdealde ulaşılabilecek max güç
     const MELTDOWN_TEMP = 1200; // Kritik Erime Sıcaklığı
+    const POWER_FACTOR = 2.2; // 1500MW hedefine ulaşmak için güç çarpanı
+    const MAX_TEMP_FROM_RODS = 1800; // Çubuklar %0'dayken teorik max ısı hedefi
 
     // Şehri Kur
     function initCity() {
@@ -82,45 +84,46 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalOpenness = rodValues.reduce((sum, val) => sum + (100 - val), 0);
         const avgOpenness = totalOpenness / 300; // 0.0 ile 1.0 arası
 
-        // Dengesizlik (Instability) Hesabı: En açık çubuk ile en kapalı çubuk arasındaki fark.
+        // Dengesizlik (Instability) Hesaplama: En açık çubuk ile en kapalı çubuk arasındaki fark
         const maxRod = Math.max(...rodValues);
         const minRod = Math.min(...rodValues);
-        const instabilityFactor = (maxRod - minRod) / 100; // 0.0 (dengeli) ile 1.0 (tamamen dengesiz) arası
+        // Rodların arasındaki max farkı alıyoruz ve 100'e bölerek 0.0-1.0 arasına çekiyoruz.
+        const instabilityFactor = (maxRod - minRod) / 100; 
         
         // Yakıt çarpanı (Plütonyum daha sıcak ve hızlı tepki verir)
-        const multiplier = gameState.fuel === 'plutonium' ? 1.5 : 1.0;
+        const multiplier = gameState.fuel === 'plutonium' ? 1.2 : 1.0; // Plutonyum çarpanı düşürüldü
 
         // 2. Yeni Sıcaklık Hedefi (Target Temperature)
         // Temel ısı (ortalama reaktiviteden)
-        let baseTargetTemp = 25 + (avgOpenness * 1200 * multiplier);
+        let baseTargetTemp = 25 + (avgOpenness * MAX_TEMP_FROM_RODS * multiplier);
         
-        // Dengesizlikten kaynaklanan ekstra ısı (Hotspot)
-        let hotspotBoost = instabilityFactor * 400 * multiplier; 
+        // Dengesizlikten kaynaklanan ekstra ısı (Hotspot) - CEZA DÜŞÜRÜLDÜ
+        let hotspotBoost = instabilityFactor * 300 * multiplier; // Max 300 derece ek hotspot
         
         let targetTemp = baseTargetTemp + hotspotBoost;
 
         // 3. Sıcaklık Değişimi
-        // Sıcaklık, hedefe doğru hareket eder.
-        let changeRate = (targetTemp - gameState.temp) * 0.02;
+        // Sıcaklık, hedefe doğru yavaşça hareket eder.
+        let changeRate = (targetTemp - gameState.temp) * 0.03; // Hız biraz arttırıldı
         gameState.temp += changeRate;
 
-        // Sıcaklık 1000°C'nin üstündeyse daha hızlı artar (gerçek reaktör geri beslemesi)
+        // Isı 1000°C'nin üstündeyse termal geri besleme ile daha hızlı artar (Gerçekçi)
         if (gameState.temp > 1000) {
-            gameState.temp += 0.5 * multiplier;
+            gameState.temp += (gameState.temp - 1000) * 0.005 * multiplier; 
         }
 
         if (gameState.temp < 25) gameState.temp = 25;
 
         // 4. Güç Üretimi (Power Output)
-        // Güç üretimi ortalama reaktiviteye bağlıdır, ancak dengesizlik verimi düşürür.
+        // Güç üretimi doğrudan Sıcaklığa bağlıdır (Buhar basınca bağlıdır).
         if (gameState.temp > 300) {
-            // Ortalama reaktiviteden potansiyel güç
-            let potentialPower = avgOpenness * MAX_POWER_IDEAL;
+            // Power = (Temp - Steam Threshold) * Factor
+            let basePower = (gameState.temp - 300) * POWER_FACTOR;
             
-            // Dengesizliği cezalandırma: Instability arttıkça verim düşer
-            let efficiencyPenalty = 1 - (instabilityFactor * 0.5); // %50'ye kadar verim kaybı
+            // Dengesizliği cezalandırma: Instability arttıkça güç verimi düşer (Türbin sallanır)
+            let efficiencyPenalty = 1 - (instabilityFactor * 0.25); // Max %25 verim kaybı
             
-            gameState.power = Math.floor(potentialPower * efficiencyPenalty);
+            gameState.power = Math.floor(basePower * efficiencyPenalty);
         } else {
             gameState.power = 0;
         }
@@ -148,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         powerDisplay.innerText = `${gameState.power} MW`;
 
-        // Şehir Işıkları Mantığı
+        // Şehir Işıkları Mantığı (150 MW / ev)
         let litCount = Math.floor(gameState.power / 150);
         if (litCount > TOTAL_HOUSES) litCount = TOTAL_HOUSES;
         gameState.housesLit = litCount;
@@ -166,18 +169,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkGameStatus(instabilityFactor) {
         // Erime Kontrolü
         if (gameState.temp >= MELTDOWN_TEMP) {
-            endGame(false, `KRİTİK BAŞARISIZLIK: ÇEKİRDEK ERİMESİ BAŞLADI (${Math.floor(gameState.temp)}°C). Dengesizlik: ${Math.floor(instabilityFactor * 100)}%`);
+            endGame(false, `KRİTİK BAŞARISIZLIK: ÇEKİRDEK ERİMESİ BAŞLADI (${Math.floor(gameState.temp)}°C). Sıcaklığı 1200°C altında tutmalıydınız!`);
+            return;
         }
 
         // Dengesizlik Uyarısı
         if (instabilityFactor > 0.4 && gameState.power > 500 && warningCount % 50 === 0) {
-             log(`TEHLİKELİ DENGE! Çubuklar arasında büyük fark var (${Math.floor(instabilityFactor * 100)}%). Hotspot riski!`, true);
+             log(`TEHLİKELİ DENGE! Çubuklar arasında büyük fark var (${Math.floor(instabilityFactor * 100)}%). Hotspot riski artıyor.`, true);
         }
         warningCount++;
         
-        // Kazanma Koşulu
-        if (gameState.housesLit === TOTAL_HOUSES && gameState.temp < MELTDOWN_TEMP) {
-            endGame(true, "TEBRİKLER! En yüksek güç seviyesinde bile reaktörünüzü mükemmel dengede tuttunuz.");
+        // Kazanma Koşulu (10 Ev yandı ve sıcaklık güvenli)
+        if (gameState.housesLit === TOTAL_HOUSES && gameState.temp < MELMDOWN_TEMP) {
+            endGame(true, "TEBRİKLER! En yüksek güç seviyesinde bile reaktörünüzü mükemmel dengede tuttunuz. Şehir Işıkları yanıyor!");
         }
     }
 
@@ -196,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // SCRAM (Acil Durdurma)
     scramBtn.addEventListener('click', () => {
+        if (!gameState.active || gameState.gameOver) return;
         rod1.value = 100; rod2.value = 100; rod3.value = 100;
         updateRodInputs();
         log("!!! SCRAM TETİKLENDİ !!! Reaksiyon durduruluyor.");
@@ -216,10 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
         rod.addEventListener('input', updateRodInputs);
     });
 
-    // Başlangıçta değerleri bir kere güncelle
     updateRodInputs();
     
-    // Bilgi Pop-up Kodları (Mevcut koddan devam)
+    // Bilgi Pop-up Kodları
     const infoPoints = document.querySelectorAll('.info-point');
     const modal = document.getElementById('infoModal');
     const closeBtn = document.querySelector('.close-btn');
