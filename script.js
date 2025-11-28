@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tempVal = document.getElementById('temp-val');
     const powerDisplay = document.getElementById('power-digital');
     const gridPercentage = document.getElementById('grid-percentage');
-    const winTimerDisplay = document.getElementById('win-timer'); // Yeni sayaç elementi
 
     // Kontroller
     const rod1 = document.getElementById('rod1');
@@ -36,17 +35,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const MELTDOWN_TEMP = 1200; 
     const POWER_FACTOR = 2.2; 
     const MAX_TEMP_FROM_RODS = 1800; 
-    const REQUIRED_STABILITY_TIME = 3; // Kazanmak için gereken süre (saniye)
-    let currentStabilityTime = 0;
 
-    // --- Yeni Bilgi Data Seti ---
+    // Yeni: Kazanmak için Gerekli Kritik Denge Pozisyonları
+    const TARGET_RODS = {
+        R1_MIN: 20, R1_MAX: 30, // Rod A
+        R2_MIN: 50, R2_MAX: 60, // Rod B
+        R3_MIN: 85, R3_MAX: 90  // Rod C
+    };
+    
+    // Yeni: Bilgi Data Seti
     const infoData = {
         "sogutma": { title: "Soğutma Kuleleri", text: "Bu hiperbolik kuleler, türbinlerden gelen buharı yoğunlaştırıp tekrar su haline getirerek sistemi soğutur. Çıkan duman radyoaktif olmayan temiz su buharıdır." },
-        "reaktor": { title: "Reaktör Binası (Koruma Kabı)", text: "Reaktör çekirdeğinin bulunduğu bu dev yapı, nükleer fisyon reaksiyonunun gerçekleştiği ve kontrol çubuklarıyla yönetildiği alandır. Kalın beton ve çelik yapısıyla çevreyi korur." },
+        "reaktor": { title: "Reaktör Binası (Koruma Kabı)", text: "Reaktör çekirdeğinin bulunduğu bu dev yapı, nükleer fisyon reaksiyonunun gerçekleştiği ve kontrol çubuklarıyla yönetildiği alandır. Bu kalın beton ve çelik yapısıyla çevreyi korur." },
         "turbin": { title: "Türbin Odası", text: "Reaktörde üretilen buharın kinetik enerjisinin mekanik enerjiye dönüştüğü yerdir. Buhar, dev türbinleri döndürür ve bu hareket jeneratörde elektriğe çevrilir." },
         "su_kaynagi": { title: "Su Kaynağı (Deniz/Nehir Girişi)", text: "Santralin ana soğutma suyu kaynağıdır. Büyük pompalar aracılığıyla soğutma kuleleri ve kondansatörler için su çekilir. Bu suyun akış hızı ve sıcaklığı sürekli izlenmelidir." },
         "yakit_deposu": { title: "Kullanılmış Yakıt Deposu", text: "Reaktörden çıkarılan kullanılmış yakıt çubuklarının depolandığı alandır. Bu çubuklar yüksek oranda radyoaktif kalır ve tamamen soğuyana kadar burada özel havuzlarda tutulur." }
     };
+
 
     // Şehri Kur
     function initCity() {
@@ -77,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initCity();
         
         log(`Yakıt yüklendi: ${fuel.toUpperCase()}. Sistem Aktif.`);
-        log("Göreviniz: Kritik denge noktasına ulaşın.");
+        log("Göreviniz: Kritik denge noktasına ulaşın ve 1500 MW gücü güvenle sağlayın.");
         
         gameLoop();
     };
@@ -85,44 +90,44 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('uraniumBtn').addEventListener('click', () => window.startGame('uranium'));
     document.getElementById('plutoniumBtn').addEventListener('click', () => window.startGame('plutonium'));
 
-    // --- Kazanma Kontrolü Fonksiyonu ---
-    function checkSpecificWinCondition() {
-        const r1 = parseInt(rod1.value);
-        const r2 = parseInt(rod2.value);
-        const r3 = parseInt(rod3.value);
-        
-        // 1. Kriter: Rodlar belirlenen aralıklarda mı?
-        const rodsInPlace = (
-            r1 >= 20 && r1 <= 30 &&
-            r2 >= 50 && r2 <= 60 &&
-            r3 >= 85 && r3 <= 90
-        );
-
-        // 2. Kriter: Yeterli güç var mı? (Tüm evler yanıyor mu?)
-        const enoughPower = gameState.housesLit === TOTAL_HOUSES;
-        
-        // 3. Kriter: Sıcaklık güvende mi?
-        const safeTemp = gameState.temp < 1100; // 1100°C altı kabul edilebilir
-        
-        return rodsInPlace && enoughPower && safeTemp;
-    }
-
     // --- Simülasyon Döngüsü ---
     function gameLoop() {
         if (!gameState.active || gameState.gameOver) return;
 
-        // 1. Reaktivite ve Dengesizlik Hesapları
         const rodValues = gameState.rods.map(val => parseInt(val));
         const totalOpenness = rodValues.reduce((sum, val) => sum + (100 - val), 0);
         const avgOpenness = totalOpenness / 300; 
-        const maxRod = Math.max(...rodValues);
-        const minRod = Math.min(...rodValues);
-        const instabilityFactor = (maxRod - minRod) / 100; 
         const multiplier = gameState.fuel === 'plutonium' ? 1.2 : 1.0; 
 
+        // 1. Dengesizlik ve Hedefe Yakınlık Kontrolü
+        const maxRod = Math.max(...rodValues);
+        const minRod = Math.min(...rodValues);
+        const genericInstabilityFactor = (maxRod - minRod) / 100; // Normalde cezalandırılan dengesizlik
+        
+        // KRİTİK DENGE KONTROLÜ
+        const targetProximity = (
+            rodValues[0] >= TARGET_RODS.R1_MIN && rodValues[0] <= TARGET_RODS.R1_MAX &&
+            rodValues[1] >= TARGET_RODS.R2_MIN && rodValues[1] <= TARGET_RODS.R2_MAX &&
+            rodValues[2] >= TARGET_RODS.R3_MIN && rodValues[2] <= TARGET_RODS.R3_MAX
+        );
+
+        let effectiveInstabilityFactor = genericInstabilityFactor;
+        
+        if (targetProximity) {
+            // Eğer KRİTİK DENGE noktasındaysak, etkili dengesizliği minimuma çek.
+            // Bu, yüksek güce çıkarken erimeyi engeller.
+            effectiveInstabilityFactor = 0.05; 
+            if (gameState.power > 1000) {
+                 if(warningCount % 100 === 0) log("KRİTİK DENGE KONUMU! Optimum sıcaklık kontrolü sağlandı.", false); 
+            }
+        }
+        
         // 2. Yeni Sıcaklık Hedefi (Target Temperature)
         let baseTargetTemp = 25 + (avgOpenness * MAX_TEMP_FROM_RODS * multiplier);
-        let hotspotBoost = instabilityFactor * 300 * multiplier; 
+        
+        // HotspotBoost'u Etkili Dengesizlik Faktörüne göre hesapla
+        let hotspotBoost = effectiveInstabilityFactor * 300 * multiplier; 
+        
         let targetTemp = baseTargetTemp + hotspotBoost;
 
         // 3. Sıcaklık Değişimi
@@ -136,7 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 4. Güç Üretimi (Power Output)
         if (gameState.temp > 300) {
             let basePower = (gameState.temp - 300) * POWER_FACTOR;
-            let efficiencyPenalty = 1 - (instabilityFactor * 0.25); 
+            
+            // Verim cezasını da Etkili Dengesizlik Faktörüne göre hesapla
+            let efficiencyPenalty = 1 - (effectiveInstabilityFactor * 0.25); 
+            
             gameState.power = Math.floor(basePower * efficiencyPenalty);
         } else {
             gameState.power = 0;
@@ -145,25 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         updateUI();
-        checkGameStatus(instabilityFactor);
-
-        // 5. Kazanma Süresi Kontrolü
-        if (checkSpecificWinCondition()) {
-            currentStabilityTime += 0.05; // 50ms (game loop hızı)
-            if (currentStabilityTime >= REQUIRED_STABILITY_TIME) {
-                endGame(true, "MÜKEMMEL DENGE! Kontrol çubuklarını tam olarak istasyonun istediği 'Stabil Güç Transferi' pozisyonunda kilitlediniz. Görev başarıyla tamamlandı.");
-                return;
-            }
-        } else {
-            if (currentStabilityTime > 0) {
-                log("Denge pozisyonundan çıktınız! Sayaç sıfırlandı.", true);
-            }
-            currentStabilityTime = 0;
-        }
+        checkGameStatus(genericInstabilityFactor); 
 
         requestAnimationFrame(gameLoop);
     }
-
+    
     // --- Güncelleme ve Kontroller ---
 
     function updateUI() {
@@ -178,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         powerDisplay.innerText = `${gameState.power} MW`;
 
-        // Şehir Işıkları
+        // Şehir Işıkları (150 MW / ev)
         let litCount = Math.floor(gameState.power / 150);
         if (litCount > TOTAL_HOUSES) litCount = TOTAL_HOUSES;
         gameState.housesLit = litCount;
@@ -188,25 +182,25 @@ document.addEventListener('DOMContentLoaded', () => {
             else house.classList.remove('lit');
         }
         gridPercentage.innerText = `${Math.floor((litCount / TOTAL_HOUSES) * 100)}%`;
-        
-        // Sayaç Güncellemesi
-        winTimerDisplay.innerText = `${currentStabilityTime.toFixed(1)}s / ${REQUIRED_STABILITY_TIME}s`;
-        if (currentStabilityTime > 0) {
-            winTimerDisplay.style.color = currentStabilityTime >= 1 ? '#00ffcc' : '#ffcc00';
-        } else {
-            winTimerDisplay.style.color = '#888';
-        }
     }
 
     let warningCount = 0;
-    function checkGameStatus(instabilityFactor) {
+    function checkGameStatus(genericInstabilityFactor) {
+        // Erime Kontrolü (Kaybetme)
         if (gameState.temp >= MELTDOWN_TEMP) {
             endGame(false, `KRİTİK BAŞARISIZLIK: ÇEKİRDEK ERİMESİ BAŞLADI (${Math.floor(gameState.temp)}°C). Sıcaklığı 1200°C altında tutmalıydınız!`);
             return;
         }
 
-        if (instabilityFactor > 0.4 && gameState.power > 500 && warningCount % 50 === 0) {
-             log(`TEHLİKELİ DENGE! Çubuklar arasında büyük fark var (${Math.floor(instabilityFactor * 100)}%). Hotspot riski artıyor.`, true);
+        // Kazanma Koşulu: 1500 MW veya üzeri ve Güvenli Sıcaklık
+        if (gameState.housesLit === TOTAL_HOUSES && gameState.temp < MELTDOWN_TEMP) {
+            endGame(true, "GÖREV BAŞARILI! Çubukları KRİTİK DENGE NOKTASINDA tutarak şehrin tüm gücünü güvenle sağladınız (1500+ MW).");
+            return;
+        }
+
+        // Dengesizlik Uyarısı (Genel loglama)
+        if (genericInstabilityFactor > 0.4 && gameState.power > 500 && warningCount % 50 === 0) {
+             log(`TEHLİKELİ DENGE! Çubuklar arasında büyük fark var (${Math.floor(genericInstabilityFactor * 100)}%). Hotspot riski artıyor. KRİTİK AYARLARA ULAŞIN: A(20-30), B(50-60), C(85-90)`, true);
         }
         warningCount++;
     }
@@ -230,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
         rod1.value = 100; rod2.value = 100; rod3.value = 100;
         updateRodInputs();
         log("!!! SCRAM TETİKLENDİ !!! Reaksiyon durduruluyor.");
-        currentStabilityTime = 0; // Sayaçı sıfırla
     });
 
     // Slider Eventleri
