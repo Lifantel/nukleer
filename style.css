@@ -1,79 +1,111 @@
-/* Genel ve Reset */
+/* Genel Ayarlar ve Reset */
 body {
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #121212;
+    background-color: #121212; /* Koyu arkaplan */
     color: #e0e0e0;
     margin: 0; padding: 10px;
+    display: flex; justify-content: center;
 }
 
-/* Modal & Giriş Ekranı */
-.mission-modal { border-top: 5px solid #ffcc00; max-width: 600px; }
-.mission-modal h1 { color: #0a4a7d; margin: 0; }
+h1 { margin: 0; font-size: 1.8rem; }
+h3 { color: #00ffcc; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 5px; }
+
+/* --- Başlangıç Ekranı --- */
+.modal-overlay {
+    display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;
+}
+.modal-overlay.active { display: flex; }
+.modal-content { 
+    background: #2b2b36; color: #e0e0e0; padding: 30px; border-radius: 10px; 
+    width: 90%; max-width: 600px; position: relative;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+    border-top: 5px solid #ffcc00;
+}
+.text-center { text-align: center; }
+.choice-btn {
+    padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;
+    font-size: 1rem; font-weight: bold; transition: 0.3s; color: white;
+}
+.uranium { background-color: #007bff; }
+.plutonium { background-color: #dc3545; }
+.restart-btn { background-color: #007bff; width: 100%; margin-top: 10px; }
+
 .rules-box {
-    background: #f8f9fa; border: 1px solid #ddd; padding: 15px;
-    text-align: left; border-radius: 5px; margin: 15px 0; color: #333;
+    background: #1e1e24; border: 1px dashed #444; padding: 15px;
+    text-align: left; border-radius: 5px; margin: 15px 0; color: #ccc;
 }
-.restart-btn { background-color: #007bff; color: white; width: 100%; margin-top: 10px; }
+.close-btn { position: absolute; top: 10px; right: 20px; font-size: 2rem; cursor: pointer; color: #aaa; }
 
-/* Ana Oyun Alanı */
+/* --- Ana Oyun Alanı --- */
 #game-container {
     max-width: 1200px; margin: 0 auto; display: none;
     background: #1e1e24; border-radius: 8px; overflow: hidden;
     box-shadow: 0 0 30px rgba(0,0,0,0.7);
 }
 
+/* Header */
 header {
     background: #2b2b36; padding: 15px 25px;
     display: flex; justify-content: space-between; align-items: center;
     border-bottom: 2px solid #444;
 }
 .badge { background: #444; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; }
+.digital-readout { text-align: right; }
 .neon-text { 
     font-family: 'Courier New', monospace; font-size: 1.5rem; color: #00ffcc; 
     text-shadow: 0 0 10px #00ffcc; font-weight: bold;
 }
 
-/* Layout Düzeni (Grid) */
+/* Ana Layout (Bölümler) */
 .main-layout { display: flex; flex-wrap: wrap; }
-.visual-section { flex: 2; padding: 20px; border-right: 1px solid #333; min-width: 300px; }
+.visual-section { flex: 2; padding: 20px; border-right: 1px solid #333; min-width: 350px; }
 .control-section { flex: 1; padding: 20px; background: #23232a; min-width: 300px; }
 
-/* Resim ve Noktalar */
+/* --- Görsel Alan --- */
 .image-map-container { position: relative; border-radius: 5px; overflow: hidden; border: 2px solid #555; }
 .image-map-container img { width: 100%; display: block; }
+
+/* Hotspotlar */
 .info-point {
     position: absolute; width: 25px; height: 25px;
     background: #007bff; color: #fff; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; border: 2px solid #fff; font-weight: bold;
     transform: translate(-50%, -50%); transition: 0.2s;
+    z-index: 10;
 }
 .info-point:hover { transform: translate(-50%, -50%) scale(1.2); background: #0056b3; }
 
-/* ŞEHİR (Yeni Özellik) */
+/* --- Şehir Bölümü --- */
 .city-container {
     margin-top: 20px; background: #1a1a20; padding: 15px;
     border-radius: 8px; border: 1px solid #333;
 }
 .houses-grid {
-    display: flex; justify-content: space-between; gap: 10px; margin-top: 10px;
+    display: flex; justify-content: space-around; gap: 5px; margin-top: 15px;
 }
-/* Ev Çizimi (CSS ile) */
+/* Ev Stili */
 .house {
-    width: 30px; height: 30px; background: #444; /* Kapalı renk */
-    position: relative; clip-path: polygon(0% 40%, 50% 0%, 100% 40%, 100% 100%, 0% 100%);
+    width: 40px; height: 35px; background: #3a3a45; /* Kapalı renk */
+    position: relative; 
+    /* Üçgen Çatı: trapezoid şeklinde bir kesim yolu */
+    clip-path: polygon(0% 40%, 50% 0%, 100% 40%, 100% 100%, 0% 100%);
     transition: background 0.5s, box-shadow 0.5s;
+    border: 1px solid #555;
 }
 .house.lit {
     background: #ffcc00; /* Açık renk */
-    box-shadow: 0 0 15px #ffcc00;
+    box-shadow: 0 0 10px #ffcc00;
 }
 .grid-status { margin-top: 10px; text-align: right; font-family: monospace; color: #888; }
 
-/* Kontrol Paneli */
+/* --- Kontrol Paneli --- */
 .gauges { margin-bottom: 20px; }
+.gauge-box label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #ccc; }
 .meter-wrapper { height: 25px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #444; }
-.meter-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000); transition: width 0.2s; }
+.meter-fill { height: 100%; width: 0%; transition: width 0.2s, background-color 0.2s; }
+/* Sıcaklık gradyanı (JS ile renk değişimi) */
 
 /* Dikey Sliderlar (Rodlar) */
 .rod-system { background: #15151a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
@@ -82,17 +114,40 @@ header {
 .rod-slider label { font-size: 0.8rem; color: #aaa; margin-top: 5px; }
 .rod-slider span { font-family: monospace; color: #00ffcc; margin-top: 2px; }
 
-/* Slider Stili (Cross-browser dikey slider zordur, transformation kullanıyoruz) */
+/* Cross-browser Dikey Slider Stili */
 input[type=range][orient=vertical] {
+    -webkit-appearance: slider-vertical; /* Chrome, Safari */
+    appearance: slider-vertical;
     writing-mode: bt-lr; /* IE/Edge */
-    -webkit-appearance: slider-vertical; /* Webkit */
-    width: 8px; height: 120px; padding: 0 5px;
+    width: 8px; 
+    height: 120px; 
+    padding: 0 5px;
+    cursor: pointer;
+    background: transparent;
+}
+input[type=range]:focus { outline: none; } /* Odak çizgisini kaldır */
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%; 
+    background: #00ffcc;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 255, 204, 0.8);
+}
+input[type=range]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #00ffcc;
+    cursor: pointer;
 }
 
-.warning-text { font-size: 0.75rem; color: #888; margin-top: 10px; text-align: center; }
+.warning-text { font-size: 0.75rem; color: #f00; margin-top: 10px; text-align: center; }
 
 .log-panel {
-    height: 150px; background: #000; color: #0f0; 
+    height: 150px; background: #000; 
     font-family: 'Courier New', monospace; font-size: 0.85rem;
     padding: 10px; overflow-y: auto; border: 1px solid #333; margin-bottom: 15px;
 }
@@ -101,16 +156,6 @@ input[type=range][orient=vertical] {
     width: 100%; padding: 15px; background: #8b0000; color: white;
     border: none; font-weight: bold; font-size: 1.1rem; cursor: pointer;
     border-radius: 5px; text-transform: uppercase; letter-spacing: 1px;
-    box-shadow: 0 4px 0 #500000;
+    box-shadow: 0 4px 0 #500000; transition: transform 0.1s;
 }
 .scram-btn:active { transform: translateY(4px); box-shadow: none; }
-
-/* Modal Ortak */
-.modal-overlay {
-    display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center;
-}
-.modal-overlay.active { display: flex; }
-.modal-content { background: #fff; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; position: relative; }
-.close-btn { position: absolute; top: 10px; right: 20px; font-size: 2rem; cursor: pointer; color: #333; }
-.text-center { text-align: center; color: #333; }
