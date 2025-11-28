@@ -3,71 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nükleer Santral Operatör Simülatörü</title>
+    <title>Nükleer Operatör: Şehir Görevi</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="selection-screen" class="modal-overlay active">
-        <div class="modal-content text-center">
-            <h2>Operatör Girişi</h2>
-            <p>Vardiyaya başlamadan önce reaktör yakıt tipini seçin:</p>
-            <div class="button-group">
-                <button id="uraniumBtn" class="choice-btn uranium">Uranyum-235</button>
-                <button id="plutoniumBtn" class="choice-btn plutonium">Plütonyum-239</button>
+        <div class="modal-content text-center mission-modal">
+            <h1>OPERATÖR BRİFİNGİ</h1>
+            <hr>
+            <h3>GÖREVİNİZ: ŞEHRİ AYDINLATIN</h3>
+            <div class="rules-box">
+                <p><strong>1. HEDEF:</strong> Reaktörü çalıştırarak 1500 MW güce ulaşın ve aşağıdaki şehirdeki <strong>10 evin tamamının</strong> ışığını yakın.</p>
+                <p><strong>2. KONTROL:</strong> 3 adet kontrol çubuğunuz var. Hepsini dengeli bir şekilde aşağı (%0'a doğru) çekerek reaksiyonu başlatın.</p>
+                <p><strong>3. RİSK:</strong> Sıcaklık <strong>1200°C</strong>'yi geçerse çekirdek erimesi başlar ve görevi kaybedersiniz.</p>
             </div>
+            <p>Başlamak için yakıt türünü seçin:</p>
+            <div class="button-group">
+                <button id="uraniumBtn" class="choice-btn uranium">Uranyum-235 (Standart)</button>
+                <button id="plutoniumBtn" class="choice-btn plutonium">Plütonyum-239 (Yüksek Isı)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-screen" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 id="end-title">SONUÇ</h2>
+            <p id="end-message">Mesaj...</p>
+            <button onclick="location.reload()" class="choice-btn restart-btn">YENİDEN BAŞLAT</button>
         </div>
     </div>
 
     <div id="game-container">
         <header>
-            <h1>Nükleer Santral Kontrol Sahası</h1>
-            <div class="status-bar">
-                <span id="fuel-status">Yakıt: Bekleniyor...</span> | 
-                <span id="system-status">Sistem: DEVRE DIŞI</span>
+            <div class="header-left">
+                <h1>Nükleer Kontrol Odası</h1>
+                <span id="fuel-status" class="badge">Sistem Beklemede</span>
+            </div>
+            <div class="header-right">
+                <div class="digital-readout">
+                    <span>ANLIK GÜÇ:</span>
+                    <span id="power-digital" class="neon-text">0 MW</span>
+                </div>
             </div>
         </header>
 
-        <div class="main-display">
-            <div class="image-map-container">
-                <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Nükleer Santral Sahası">
-
-                <div class="info-point" data-info="sogutma" style="top: 38%; left: 32%;">?</div>
-                <div class="info-point" data-info="reaktor" style="top: 58%; left: 45%;">?</div>
-                <div class="info-point" data-info="turbin" style="top: 62%; left: 58%;">?</div>
-                <div class="info-point" data-info="guvenlik" style="top: 75%; left: 80%;">?</div>
-            </div>
-
-            <div class="system-log">
-                <h3>Sistem Kayıtları</h3>
-                <div id="log-content">
-                    <p>> Sistem başlatılmayı bekliyor...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="control-panel">
-            <div class="gauge-container">
-                <div class="gauge">
-                    <label>Çekirdek Sıcaklığı (°C)</label>
-                    <div class="bar-bg"><div id="temp-bar" class="bar-fill" style="width: 0%;"></div></div>
-                    <span id="temp-val">25°C</span>
-                </div>
-                <div class="gauge">
-                    <label>Elektrik Üretimi (MW)</label>
-                    <div class="bar-bg"><div id="power-bar" class="bar-fill" style="width: 0%;"></div></div>
-                    <span id="power-val">0 MW</span>
-                </div>
-            </div>
-
-            <div class="controls-container">
-                <div class="control-group">
-                    <label for="control-rods">Kontrol Çubukları Seviyesi</label>
-                    <input type="range" id="control-rods" min="0" max="100" value="100">
-                    <p class="small-text">Çubuklar %100: Reaksiyon Durur | %0: Tam Güç</p>
+        <div class="main-layout">
+            <div class="visual-section">
+                <div class="image-map-container">
+                    <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Santral">
+                    <div class="info-point" data-info="sogutma" style="top: 38%; left: 32%;">?</div>
+                    <div class="info-point" data-info="reaktor" style="top: 58%; left: 45%;">?</div>
+                    <div class="info-point" data-info="turbin" style="top: 62%; left: 58%;">?</div>
                 </div>
                 
-                <button id="scram-btn" class="scram-btn">SCRAM (ACİL DURDURMA)</button>
+                <div class="city-container">
+                    <h3>ŞEHİR ŞEBEKESİ</h3>
+                    <div class="houses-grid" id="houses-grid">
+                        </div>
+                    <div class="grid-status">Şebeke Durumu: <span id="grid-percentage">0%</span></div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>REAKTÖR ÇEKİRDEK KONTROLÜ</h3>
+                
+                <div class="gauges">
+                    <div class="gauge-box">
+                        <label>Çekirdek Isısı (°C)</label>
+                        <div class="meter-wrapper">
+                            <div id="temp-bar" class="meter-fill"></div>
+                        </div>
+                        <span id="temp-val">25°C</span>
+                    </div>
+                </div>
+
+                <div class="rod-system">
+                    <p class="panel-label">KONTROL ÇUBUKLARI (ROD BANKS)</p>
+                    <div class="rod-group">
+                        <div class="rod-slider">
+                            <input type="range" id="rod1" min="0" max="100" value="100" orient="vertical">
+                            <label>ROD A</label>
+                            <span id="val-rod1">100%</span>
+                        </div>
+                        <div class="rod-slider">
+                            <input type="range" id="rod2" min="0" max="100" value="100" orient="vertical">
+                            <label>ROD B</label>
+                            <span id="val-rod2">100%</span>
+                        </div>
+                        <div class="rod-slider">
+                            <input type="range" id="rod3" min="0" max="100" value="100" orient="vertical">
+                            <label>ROD C</label>
+                            <span id="val-rod3">100%</span>
+                        </div>
+                    </div>
+                    <p class="warning-text">DİKKAT: Dengesiz çekiş ısı dalgalanması yaratır.</p>
+                </div>
+
+                <div class="log-panel" id="log-content">
+                    <p>> Sistem hazır...</p>
+                </div>
+
+                <button id="scram-btn" class="scram-btn">SCRAM (ACİL KAPAT)</button>
             </div>
         </div>
     </div>
@@ -75,8 +112,8 @@
     <div id="infoModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h2 id="modal-title">Başlık</h2>
-            <div id="modal-text">İçerik...</div>
+            <h2 id="modal-title"></h2>
+            <p id="modal-text"></p>
         </div>
     </div>
 
