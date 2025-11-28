@@ -31,8 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const TOTAL_HOUSES = 10;
-    const MAX_POWER = 1600; // Kazanmak için gereken max güç civarı
-    const MELTDOWN_TEMP = 1200;
+    const MAX_POWER_IDEAL = 1600; // İdealde ulaşılabilecek max güç
+    const MELTDOWN_TEMP = 1200; // Kritik Erime Sıcaklığı
 
     // Şehri Kur
     function initCity() {
@@ -46,9 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Log Yazdırma
-    function log(msg) {
+    function log(msg, isWarning = false) {
         const p = document.createElement('p');
         p.innerText = `> ${msg}`;
+        p.style.color = isWarning ? '#ffcc00' : '#0f0';
         logContent.prepend(p);
         if (logContent.children.length > 15) logContent.lastChild.remove();
     }
@@ -61,9 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
         gameContainer.style.display = 'block';
         initCity();
         
-        log(`Yakıt yüklendi: ${fuel.toUpperCase()}`);
-        log("Türbinler dönmeye hazır.");
-        log("HEDEF: 3 Çubuğu kontrol ederek 1500 MW güce ulaş.");
+        log(`Yakıt yüklendi: ${fuel.toUpperCase()}. Sistem Aktif.`);
+        log("HEDEF: Çubukları dengede tutarak 1500 MW güce ulaş.");
         
         gameLoop();
     };
@@ -75,41 +75,65 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameLoop() {
         if (!gameState.active || gameState.gameOver) return;
 
-        // 1. Reaktivite Hesabı (3 çubuğun ortalaması)
-        // 100 = Kapalı, 0 = Tam açık
-        let totalRodOpenness = 0;
-        gameState.rods.forEach(val => totalRodOpenness += (100 - val));
-        let avgOpenness = totalRodOpenness / 3;
-
-        // Yakıt çarpanı
-        let multiplier = gameState.fuel === 'plutonium' ? 1.5 : 1.0;
-
-        // 2. Sıcaklık Değişimi
-        // Çubuklar açıksa ısınılır, kapalıysa soğunur
-        let targetTemp = 25 + (avgOpenness * 15 * multiplier); 
+        // 1. Reaktivite ve Dengesizlik Hesapları
+        const rodValues = gameState.rods.map(val => parseInt(val));
         
-        // Isınma/Soğuma hızı (Plütonyum daha hızlı ısınır)
-        let changeRate = (targetTemp - gameState.temp) * 0.05;
+        // Ortalamanın açılması (Ne kadar güç istediğimiz)
+        const totalOpenness = rodValues.reduce((sum, val) => sum + (100 - val), 0);
+        const avgOpenness = totalOpenness / 300; // 0.0 ile 1.0 arası
+
+        // Dengesizlik (Instability) Hesabı: En açık çubuk ile en kapalı çubuk arasındaki fark.
+        const maxRod = Math.max(...rodValues);
+        const minRod = Math.min(...rodValues);
+        const instabilityFactor = (maxRod - minRod) / 100; // 0.0 (dengeli) ile 1.0 (tamamen dengesiz) arası
+        
+        // Yakıt çarpanı (Plütonyum daha sıcak ve hızlı tepki verir)
+        const multiplier = gameState.fuel === 'plutonium' ? 1.5 : 1.0;
+
+        // 2. Yeni Sıcaklık Hedefi (Target Temperature)
+        // Temel ısı (ortalama reaktiviteden)
+        let baseTargetTemp = 25 + (avgOpenness * 1200 * multiplier);
+        
+        // Dengesizlikten kaynaklanan ekstra ısı (Hotspot)
+        let hotspotBoost = instabilityFactor * 400 * multiplier; 
+        
+        let targetTemp = baseTargetTemp + hotspotBoost;
+
+        // 3. Sıcaklık Değişimi
+        // Sıcaklık, hedefe doğru hareket eder.
+        let changeRate = (targetTemp - gameState.temp) * 0.02;
         gameState.temp += changeRate;
 
-        // Rastgele dalgalanma (Çubuklar dengesizse artar)
-        let instability = Math.abs(gameState.rods[0] - gameState.rods[2]) / 100;
-        gameState.temp += (Math.random() - 0.5) * (instability * 20);
+        // Sıcaklık 1000°C'nin üstündeyse daha hızlı artar (gerçek reaktör geri beslemesi)
+        if (gameState.temp > 1000) {
+            gameState.temp += 0.5 * multiplier;
+        }
 
         if (gameState.temp < 25) gameState.temp = 25;
 
-        // 3. Güç Üretimi (300 dereceden sonra başlar)
+        // 4. Güç Üretimi (Power Output)
+        // Güç üretimi ortalama reaktiviteye bağlıdır, ancak dengesizlik verimi düşürür.
         if (gameState.temp > 300) {
-            gameState.power = Math.floor((gameState.temp - 300) * 1.5);
+            // Ortalama reaktiviteden potansiyel güç
+            let potentialPower = avgOpenness * MAX_POWER_IDEAL;
+            
+            // Dengesizliği cezalandırma: Instability arttıkça verim düşer
+            let efficiencyPenalty = 1 - (instabilityFactor * 0.5); // %50'ye kadar verim kaybı
+            
+            gameState.power = Math.floor(potentialPower * efficiencyPenalty);
         } else {
             gameState.power = 0;
         }
+        if (gameState.power < 0) gameState.power = 0;
+
 
         updateUI();
-        checkGameStatus();
+        checkGameStatus(instabilityFactor);
 
         requestAnimationFrame(gameLoop);
     }
+
+    // --- Güncelleme ve Kontroller ---
 
     function updateUI() {
         // Sıcaklık Barı
@@ -117,35 +141,43 @@ document.addEventListener('DOMContentLoaded', () => {
         tempBar.style.width = `${Math.min(tempPct, 100)}%`;
         tempVal.innerText = `${Math.floor(gameState.temp)}°C`;
 
-        // Güç Göstergesi
+        // Renk Değişimi
+        if (gameState.temp < 800) tempBar.style.backgroundColor = "#00cc66"; 
+        else if (gameState.temp < 1100) tempBar.style.backgroundColor = "#ffcc00"; 
+        else tempBar.style.backgroundColor = "#ff0000"; 
+        
         powerDisplay.innerText = `${gameState.power} MW`;
 
         // Şehir Işıkları Mantığı
-        // Her 150 MW bir evi yakar
         let litCount = Math.floor(gameState.power / 150);
         if (litCount > TOTAL_HOUSES) litCount = TOTAL_HOUSES;
         gameState.housesLit = litCount;
 
-        // Evleri görsel olarak güncelle
         for (let i = 0; i < TOTAL_HOUSES; i++) {
             const house = document.getElementById(`house-${i}`);
             if (i < litCount) house.classList.add('lit');
             else house.classList.remove('lit');
         }
 
-        gridPercentage.innerText = `${(litCount / TOTAL_HOUSES) * 100}%`;
+        gridPercentage.innerText = `${Math.floor((litCount / TOTAL_HOUSES) * 100)}%`;
     }
 
-    function checkGameStatus() {
-        // Kaybetme Koşulu: Erime
+    let warningCount = 0;
+    function checkGameStatus(instabilityFactor) {
+        // Erime Kontrolü
         if (gameState.temp >= MELTDOWN_TEMP) {
-            endGame(false, "ÇEKİRDEK ERİMESİ! Santral patladı ve şehir radyasyona maruz kaldı.");
+            endGame(false, `KRİTİK BAŞARISIZLIK: ÇEKİRDEK ERİMESİ BAŞLADI (${Math.floor(gameState.temp)}°C). Dengesizlik: ${Math.floor(instabilityFactor * 100)}%`);
         }
 
-        // Kazanma Koşulu: Tüm evler yandı
-        if (gameState.housesLit === TOTAL_HOUSES) {
-            // Hemen kazanmak yerine 1 saniye bekletilebilir ama basitlik için hemen bitirelim
-            endGame(true, "TEBRİKLER! Şehrin tüm enerji ihtiyacını güvenle karşıladınız.");
+        // Dengesizlik Uyarısı
+        if (instabilityFactor > 0.4 && gameState.power > 500 && warningCount % 50 === 0) {
+             log(`TEHLİKELİ DENGE! Çubuklar arasında büyük fark var (${Math.floor(instabilityFactor * 100)}%). Hotspot riski!`, true);
+        }
+        warningCount++;
+        
+        // Kazanma Koşulu
+        if (gameState.housesLit === TOTAL_HOUSES && gameState.temp < MELTDOWN_TEMP) {
+            endGame(true, "TEBRİKLER! En yüksek güç seviyesinde bile reaktörünüzü mükemmel dengede tuttunuz.");
         }
     }
 
@@ -158,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         endScreen.classList.add('active');
         title.innerText = victory ? "GÖREV BAŞARILI" : "KRİTİK HATA";
-        title.style.color = victory ? "green" : "red";
+        title.style.color = victory ? "#00cc66" : "red";
         message.innerText = msg;
     }
 
@@ -166,8 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scramBtn.addEventListener('click', () => {
         rod1.value = 100; rod2.value = 100; rod3.value = 100;
         updateRodInputs();
-        log("SCRAM tetiklendi! Tüm çubuklar kapatıldı.");
-        // Scram ile oyunu kaybetmezsiniz, sadece soğutursunuz, ama güç düşer.
+        log("!!! SCRAM TETİKLENDİ !!! Reaksiyon durduruluyor.");
     });
 
     // Slider Eventleri
@@ -184,6 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
     [rod1, rod2, rod3].forEach(rod => {
         rod.addEventListener('input', updateRodInputs);
     });
+
+    // Başlangıçta değerleri bir kere güncelle
+    updateRodInputs();
     
     // Bilgi Pop-up Kodları (Mevcut koddan devam)
     const infoPoints = document.querySelectorAll('.info-point');
@@ -193,9 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalText = document.getElementById('modal-text');
 
     const infoData = {
-        "sogutma": { title: "Soğutma Kuleleri", text: "Su buharı çıkaran dev bacalar." },
-        "reaktor": { title: "Reaktör Binası", text: "Çekirdeğin bulunduğu korunaklı alan." },
-        "turbin": { title: "Türbin Odası", text: "Elektriğin üretildiği jeneratörlerin yeri." }
+        "sogutma": { title: "Soğutma Kuleleri", text: "Su buharı çıkaran dev bacalar. Bu kuleler reaktörden gelen sıcak suyu soğutarak çevrime geri gönderir. Verimliliği korumak için hayati öneme sahiptir." },
+        "reaktor": { title: "Reaktör Binası", text: "Çekirdeğin bulunduğu korunaklı alan. Burası kalın beton ve çelikten yapılmış çok katmanlı bir koruma kabıdır. Çekirdek ısıtma ve fisyon (bölünme) işlemleri burada gerçekleşir." },
+        "turbin": { title: "Türbin Odası", text: "Elektriğin üretildiği jeneratörlerin yeri. Reaktörde üretilen buharın basınçla türbinleri döndürmesi sonucu elektrik enerjisi elde edilir." }
     };
 
     infoPoints.forEach(p => {
