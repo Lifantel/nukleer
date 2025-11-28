@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nükleer Reaktör Simülatörü</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Nükleer Reaktör Simülatörü</h1>
+        <p class="info">
+            Amaç: Kontrol çubuklarını kullanarak reaktörü <strong>Tehlikeli</strong> seviyeye getirmeden
+            veya <strong>Durdurmadan</strong> enerji üretmek.
+        </p>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h2>Reaktör Sıcaklığı</h2>
+                <div id="temperature" class="stat-value">20 °C</div>
+                <div id="temp-bar" class="bar-container">
+                    <div id="temp-fill" class="bar-fill"></div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <h2>Üretilen Enerji</h2>
+                <div id="energy" class="stat-value">0 MW</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="raiseRods">Kontrol Çubuklarını Yükselt (Hızlandır)</button>
+            <button id="lowerRods">Kontrol Çubuklarını Alçalt (Yavaşlat)</button>
+        </div>
+
+        <div id="status" class="status-message">
+            Durum: Reaktör devrede.
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
