@@ -1,135 +1,152 @@
+/* Genel Sayfa Stilleri */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f0f2f5;
+    background-color: #f0f4f8;
     color: #333;
+    margin: 0;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    margin: 0;
-}
-
-.container {
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    width: 90%;
-    max-width: 600px;
-    text-align: center;
+    flex-direction: column;
 }
 
 h1 {
-    color: #2c3e50;
-    margin-bottom: 10px;
+    color: #0a4a7d;
+    text-align: center;
+}
+p {
+    text-align: center;
 }
 
-.info {
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 25px;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-    margin-bottom: 25px;
-}
-
-@media (min-width: 600px) {
-    .stats-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-.stat-box {
-    background-color: #f9f9f9;
-    border: 1px solid #e0e0e0;
+/* Fotoğraf ve '?' Konteyneri */
+.image-map-container {
+    position: relative; /* '?' işaretlerini buna göre konumlandıracağız */
+    width: 90%;
+    max-width: 1000px;
+    margin: 20px auto;
+    border: 3px solid #ccc;
     border-radius: 8px;
-    padding: 20px;
-}
-
-.stat-box h2 {
-    font-size: 1.1em;
-    margin-top: 0;
-    color: #34495e;
-}
-
-.stat-value {
-    font-size: 2.2em;
-    font-weight: 700;
-    color: #2980b9;
-}
-
-/* Sıcaklık Çubuğu */
-.bar-container {
-    width: 100%;
-    background-color: #e0e0e0;
-    border-radius: 5px;
-    height: 20px;
-    margin-top: 15px;
     overflow: hidden;
 }
 
-.bar-fill {
-    height: 100%;
-    width: 0%; /* JavaScript ile güncellenecek */
-    background-color: #2ecc71; /* Yeşil */
-    transition: width 0.5s ease, background-color 0.5s ease;
+.image-map-container img {
+    width: 100%;
+    display: block; /* Altındaki boşluğu kaldırır */
 }
 
-.controls {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-button {
-    background-color: #3498db;
+/* '?' İşaretlerinin Stili */
+.info-point {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-color: #007bff;
     color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 5px;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #2980b9;
-}
-
-button:active {
-    transform: translateY(1px);
-}
-
-.status-message {
-    font-size: 1.2em;
+    font-size: 1.2rem;
     font-weight: bold;
-    padding: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transform: translate(-50%, -50%); /* Tam merkeze oturtur */
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.info-point:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+    background-color: #0056b3;
+}
+
+/* Modal (Pop-up) Stilleri */
+.modal-overlay {
+    display: none; /* Başlangıçta gizli */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex; /* JavaScript ile açıldığında */
+}
+
+.modal-content {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 2rem;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #0a4a7d;
+}
+
+/* Başlangıç Seçim Ekranı Stilleri */
+#game-container {
+    display: none; /* Başlangıçta gizli */
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.choice-btn {
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
     border-radius: 5px;
-    margin-top: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-/* Durum Renkleri */
-.status-stable {
-    background-color: #e8f5e9; /* Açık Yeşil */
-    color: #2e7d32;
+#uraniumBtn {
+    background-color: #28a745;
+    color: white;
+}
+#uraniumBtn:hover {
+    background-color: #218838;
 }
 
-.status-warning {
-    background-color: #fff3e0; /* Açık Turuncu */
-    color: #e65100;
+#plutoniumBtn {
+    background-color: #dc3545;
+    color: white;
 }
-
-.status-danger {
-    background-color: #ffebee; /* Açık Kırmızı */
-    color: #c62828;
-}
-
-.status-shutdown {
-    background-color: #eceff1; /* Açık Gri */
-    color: #37474f;
+#plutoniumBtn:hover {
+    background-color: #c82333;
 }
