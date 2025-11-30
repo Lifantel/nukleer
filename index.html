@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nükleer Operatör: Şehir Görevi</title>
+    <title>Nükleer Operatör v2.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,18 +12,17 @@
         <div class="modal-content text-center">
             <h1>NÜKLEER OPERATÖR: GÖREV BAŞLANGICI</h1>
             <div class="rules-box">
-                <p><strong>GÖREV:</strong> Şehrin elektrik ihtiyacını (Load Profile) karşıla ve reaktörü patlatma.</p>
-                <p>⚠️ <strong>DİKKAT:</strong></p>
+                <p><strong>YENİ GÖREV:</strong> Şehre elektrik ver, para kazan ve santralini geliştir.</p>
                 <ul>
-                    <li>Sıcaklığı 1200°C altında tut.</li>
-                    <li>Kontrol çubuklarını dengeli çek (Hotspot oluşmasın).</li>
-                    <li>Şebeke talebi değişkendir, takip et.</li>
+                    <li>⚡ <strong>Gelir:</strong> Üretilen her MW sana nakit kazandırır.</li>
+                    <li>🛠️ <strong>Market:</strong> Kazandığın parayla soğutma ve güvenlik sistemlerini güçlendir.</li>
+                    <li>⚠️ <strong>DİKKAT:</strong> Çekirdek erimesini önle!</li>
                 </ul>
             </div>
             <h3>YAKIT TÜRÜNÜ SEÇ:</h3>
-            <button id="uraniumBtn" class="choice-btn uranium">URANYUM-235 (Standart - Kararlı)</button>
+            <button id="uraniumBtn" class="choice-btn uranium">URANYUM-235 (Dengeli)</button>
             <br><br>
-            <button id="plutoniumBtn" class="choice-btn plutonium">PLÜTONYUM-239 (Yüksek Güç - Dengesiz)</button>
+            <button id="plutoniumBtn" class="choice-btn plutonium">PLÜTONYUM-239 (Riskli & Yüksek Gelir)</button>
         </div>
     </div>
 
@@ -32,6 +31,30 @@
             <h1 id="end-title">OYUN BİTTİ</h1>
             <p id="end-message" style="margin: 20px 0; font-size: 1.1rem;">Reaktör durumu kritik.</p>
             <button class="choice-btn restart-btn" onclick="location.reload()">SİSTEMİ YENİDEN BAŞLAT</button>
+        </div>
+    </div>
+
+    <div id="shopModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn shop-close">&times;</span>
+            <h3 style="color: #ffcc00;">SANTRAL GELİŞTİRMELERİ</h3>
+            <div class="shop-grid">
+                <div class="shop-item" id="item-turbine">
+                    <h4>Gelişmiş Türbinler</h4>
+                    <p>Geliri %20 Artırır</p>
+                    <button class="buy-btn" onclick="buyUpgrade('turbine', 5000)">SATIN AL (5.000$)</button>
+                </div>
+                <div class="shop-item" id="item-cooling">
+                    <h4>Soğutma AI</h4>
+                    <p>Soğutma Verimi +%15</p>
+                    <button class="buy-btn" onclick="buyUpgrade('cooling', 8000)">SATIN AL (8.000$)</button>
+                </div>
+                <div class="shop-item" id="item-containment">
+                    <h4>Güçlendirilmiş Çekirdek</h4>
+                    <p>Max Isı +300°C</p>
+                    <button class="buy-btn" onclick="buyUpgrade('containment', 12000)">SATIN AL (12.000$)</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -49,13 +72,19 @@
                 <h1>Nükleer Kontrol Odası</h1>
                 <span id="fuel-status" class="badge">Sistem Beklemede</span>
             </div>
+            <div class="header-center">
+                <div class="money-display">
+                    BAKİYE: <span id="money-val" style="color: #00ffcc;">0</span> $
+                </div>
+                <button id="open-shop-btn" class="shop-btn">MARKET 🛒</button>
+            </div>
             <div class="header-right">
                 <div class="digital-readout">
-                    <span>HEDEF GÜÇ:</span> 
+                    <span>HEDEF:</span> 
                     <span id="target-power-digital" class="neon-text target">1000 MW</span>
                 </div>
                 <div class="digital-readout">
-                    <span>ANLIK GÜÇ:</span>
+                    <span>ANLIK:</span>
                     <span id="power-digital" class="neon-text">0 MW</span>
                 </div>
             </div>
@@ -64,7 +93,7 @@
         <div class="main-layout">
             <div class="visual-section">
                 <div class="image-map-container">
-                    <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Santral">
+                    <div id="day-night-overlay" class="overlay-layer"></div> <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Santral">
                     
                     <div class="info-point" data-info="sogutma" style="top: 38%; left: 32%;">?</div>
                     <div class="info-point" data-info="reaktor" style="top: 58%; left: 45%;">?</div>
@@ -74,14 +103,17 @@
                 </div>
                 
                 <div class="city-container">
-                    <h3>ŞEHİR ŞEBEKESİ</h3>
+                    <div style="display:flex; justify-content:space-between;">
+                        <h3>ŞEHİR ŞEBEKESİ</h3>
+                        <span id="time-display" style="color:#aaa; font-family:monospace;">00:00</span>
+                    </div>
                     <div class="houses-grid" id="houses-grid"></div>
                     <div class="grid-status">Şebeke Durumu: <span id="grid-percentage">0%</span></div>
                 </div>
             </div>
 
             <div class="control-section">
-                <h3>REAKTÖR ÇEKİRDEK KONTROLÜ</h3>
+                <h3>KONTROL PANELİ</h3>
                 
                 <div class="gauges">
                     <div class="gauge-box">
@@ -102,42 +134,42 @@
                 </div>
 
                 <div class="rod-system">
-                    <p class="panel-label">SOĞUTMA & BAKIM</p>
+                    <p class="panel-label">SOĞUTMA SİSTEMİ</p>
                     <div class="control-toggle">
-                        <label for="coolingSlider">Pompa Hızı:</label>
+                        <label>Pompa Hızı:</label>
                         <input type="range" id="coolingSlider" min="0" max="100" value="50" style="width: 70%;">
                         <span id="cooling-val">50%</span>
                     </div>
-                    <button id="refuel-btn" class="choice-btn restart-btn" disabled>YAKIT İKMALİ YAP (REAKTÖRÜ DURDUR)</button>
+                    <button id="refuel-btn" class="choice-btn restart-btn" disabled>YAKIT İKMALİ (2.000$)</button>
                 </div>
 
                 <div class="rod-system">
-                    <p class="panel-label">KONTROL ÇUBUKLARI (KRİTİK HEDEF)</p>
+                    <p class="panel-label">KONTROL ÇUBUKLARI</p>
                     <div class="rod-group">
                         <div class="rod-slider">
                             <input type="range" id="rod1" min="0" max="100" value="100" class="vertical-range">
-                            <label>ROD A</label>
-                            <span id="val-rod1">100%</span>
+                            <label>A</label>
+                            <span id="val-rod1">100</span>
                         </div>
                         <div class="rod-slider">
                             <input type="range" id="rod2" min="0" max="100" value="100" class="vertical-range">
-                            <label>ROD B</label>
-                            <span id="val-rod2">100%</span>
+                            <label>B</label>
+                            <span id="val-rod2">100</span>
                         </div>
                         <div class="rod-slider">
                             <input type="range" id="rod3" min="0" max="100" value="100" class="vertical-range">
-                            <label>ROD C</label>
-                            <span id="val-rod3">100%</span>
+                            <label>C</label>
+                            <span id="val-rod3">100</span>
                         </div>
                     </div>
-                    <p class="warning-text">DİKKAT: Dengesiz çekiş (Hotspot) ısı dalgalanması yaratır.</p>
+                    <p class="warning-text" id="stability-warning">Stabilite: Normal</p>
                 </div>
 
                 <div class="log-panel" id="log-content">
-                    <p>> Sistem hazır...</p>
+                    <p>> Sistem başlatılıyor...</p>
                 </div>
 
-                <button id="scram-btn" class="scram-btn">SCRAM (ACİL KAPAT)</button>
+                <button id="scram-btn" class="scram-btn">SCRAM (ACİL DURDUR)</button>
             </div>
         </div>
     </div>
