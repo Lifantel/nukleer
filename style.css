@@ -56,12 +56,10 @@ header {
     font-family: 'Courier New', monospace; font-size: 1.5rem; color: #00ffcc; 
     text-shadow: 0 0 10px #00ffcc; font-weight: bold;
 }
-/* YENİ: Hedef Güç Rengi */
 .neon-text.target {
     color: #ffcc00;
     text-shadow: 0 0 10px #ffcc00;
 }
-
 
 /* Ana Layout (Bölümler) */
 .main-layout { display: flex; flex-wrap: wrap; }
@@ -91,17 +89,15 @@ header {
 .houses-grid {
     display: flex; justify-content: space-around; gap: 5px; margin-top: 15px;
 }
-/* Ev Stili */
 .house {
-    width: 40px; height: 35px; background: #3a3a45; /* Kapalı renk */
+    width: 40px; height: 35px; background: #3a3a45;
     position: relative; 
-    /* Üçgen Çatı: trapezoid şeklinde bir kesim yolu */
     clip-path: polygon(0% 40%, 50% 0%, 100% 40%, 100% 100%, 0% 100%);
     transition: background 0.5s, box-shadow 0.5s;
     border: 1px solid #555;
 }
 .house.lit {
-    background: #ffcc00; /* Açık renk */
+    background: #ffcc00;
     box-shadow: 0 0 10px #ffcc00;
 }
 .grid-status { margin-top: 10px; text-align: right; font-family: monospace; color: #888; }
@@ -111,13 +107,11 @@ header {
 .gauge-box label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #ccc; }
 .meter-wrapper { height: 25px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #444; }
 .meter-fill { height: 100%; width: 0%; transition: width 0.2s, background-color 0.2s; }
-/* YENİ: Yakıt Barı Rengi */
 .meter-fill.green-fill {
     background-color: #00cc66;
     width: 100%;
 }
 
-/* YENİ: Soğutma Kontrol Paneli */
 .control-toggle {
     display: flex; align-items: center; justify-content: space-between; margin: 10px 0;
 }
@@ -131,26 +125,28 @@ header {
     background-color: #6c757d; cursor: not-allowed;
 }
 
-/* Dikey Sliderlar (Rodlar) */
+/* Dikey Sliderlar (Modern Cross-Browser Çözüm) */
 .rod-system { background: #15151a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
 .rod-group { display: flex; justify-content: space-around; height: 180px; margin-top: 10px; }
 .rod-slider { display: flex; flex-direction: column; align-items: center; height: 100%; }
 .rod-slider label { font-size: 0.8rem; color: #aaa; margin-top: 5px; }
 .rod-slider span { font-family: monospace; color: #00ffcc; margin-top: 2px; }
 
-/* Cross-browser Dikey Slider Stili */
-input[type=range][orient=vertical] {
-    -webkit-appearance: slider-vertical; /* Chrome, Safari */
-    appearance: slider-vertical;
-    writing-mode: bt-lr; /* IE/Edge */
+/* Standart Dikey Range Input */
+input[type=range].vertical-range {
+    writing-mode: bt-lr; /* IE/Edge legacy */
+    -webkit-appearance: none; /* Standart dışı görünümü kaldır */
+    writing-mode: vertical-lr; /* Modern tarayıcılar */
+    direction: rtl; /* Yukarı doğru %100 olması için */
     width: 8px; 
     height: 120px; 
-    padding: 0 5px;
+    background: #444;
+    border-radius: 5px;
     cursor: pointer;
-    background: transparent;
+    margin: 0 10px;
 }
-input[type=range]:focus { outline: none; } /* Odak çizgisini kaldır */
-input[type=range]::-webkit-slider-thumb {
+
+input[type=range].vertical-range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 20px;
@@ -159,14 +155,19 @@ input[type=range]::-webkit-slider-thumb {
     background: #00ffcc;
     cursor: pointer;
     box-shadow: 0 0 5px rgba(0, 255, 204, 0.8);
+    border: 2px solid #fff;
 }
-input[type=range]::-moz-range-thumb {
+
+input[type=range].vertical-range::-moz-range-thumb {
     width: 20px;
     height: 20px;
     border-radius: 50%;
     background: #00ffcc;
     cursor: pointer;
+    border: 2px solid #fff;
 }
+
+input[type=range]:focus { outline: none; } 
 
 .warning-text { font-size: 0.75rem; color: #f00; margin-top: 10px; text-align: center; }
 
