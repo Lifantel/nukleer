@@ -56,6 +56,12 @@ header {
     font-family: 'Courier New', monospace; font-size: 1.5rem; color: #00ffcc; 
     text-shadow: 0 0 10px #00ffcc; font-weight: bold;
 }
+/* YENİ: Hedef Güç Rengi */
+.neon-text.target {
+    color: #ffcc00;
+    text-shadow: 0 0 10px #ffcc00;
+}
+
 
 /* Ana Layout (Bölümler) */
 .main-layout { display: flex; flex-wrap: wrap; }
@@ -101,11 +107,29 @@ header {
 .grid-status { margin-top: 10px; text-align: right; font-family: monospace; color: #888; }
 
 /* --- Kontrol Paneli --- */
-.gauges { margin-bottom: 20px; }
+.gauges { margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
 .gauge-box label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #ccc; }
 .meter-wrapper { height: 25px; background: #111; border-radius: 12px; overflow: hidden; border: 1px solid #444; }
 .meter-fill { height: 100%; width: 0%; transition: width 0.2s, background-color 0.2s; }
-/* Sıcaklık gradyanı (JS ile renk değişimi) */
+/* YENİ: Yakıt Barı Rengi */
+.meter-fill.green-fill {
+    background-color: #00cc66;
+    width: 100%;
+}
+
+/* YENİ: Soğutma Kontrol Paneli */
+.control-toggle {
+    display: flex; align-items: center; justify-content: space-between; margin: 10px 0;
+}
+.control-toggle label { color: #ccc; font-size: 0.9rem; }
+.control-toggle span { font-family: monospace; color: #00ffcc; }
+
+#refuel-btn {
+    width: 100%; margin-top: 10px; background-color: #28a745; font-size: 0.9rem;
+}
+#refuel-btn:disabled {
+    background-color: #6c757d; cursor: not-allowed;
+}
 
 /* Dikey Sliderlar (Rodlar) */
 .rod-system { background: #15151a; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
