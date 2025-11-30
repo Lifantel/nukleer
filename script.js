@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const repVal = document.getElementById('rep-val');
     const stabilityWarning = document.getElementById('stability-warning');
     
-    // Sağlık Barları
+    // Sağlık Barları (HATA KAYNAĞI BURASIYDI, DOĞRU ELEMENTLERİ ALIYORUZ)
     const turbineHealthBar = document.getElementById('turbine-health-bar');
     const pumpHealthBar = document.getElementById('pump-health-bar');
 
@@ -180,18 +180,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if(gameState.upgrades.cooling) coolingPower *= 1.3;
 
         // Yeni Sıcaklık (Termal Atalet ile - yavaş değişim)
-        // Hedef sıcaklık: Üretim ile soğutmanın dengelendiği nokta
         let targetT = 25 + (heatGen - coolingPower);
         if(targetT < 25) targetT = 25;
         
-        // Mevcut sıcaklığı hedefe doğru %1 yaklaştır (Smoothing)
         gameState.temp += (targetT - gameState.temp) * 0.01;
 
         // Güç Üretimi
         if(gameState.temp > 150) {
-            // İdeal çalışma aralığı 300-900 derece arası
             let efficiency = 1;
-            if(gameState.temp > 1000) efficiency = 0.5; // Aşırı ısınma verimi düşürür
+            if(gameState.temp > 1000) efficiency = 0.5; 
             
             gameState.power = Math.floor((gameState.temp - 100) * 1.5 * efficiency);
             // Türbin sağlığı etkisi
@@ -220,23 +217,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Yardımcı Mantık ---
 
     function checkReputation() {
-        // Hedef gücün ne kadarını karşılıyoruz?
         let coverage = gameState.power / gameState.targetPower;
         
         if(coverage < 0.8) {
-            // Elektrik yetersiz -> Halk kızar
-            gameState.reputation -= 0.5;
+            gameState.reputation -= 0.05; // Yavaşça düşer
         } else if(coverage > 1.2) {
-            // Aşırı yükleme -> Şebeke zararı -> Hafif kızgınlık
-            gameState.reputation -= 0.2;
+            gameState.reputation -= 0.02;
         } else {
-            // İyi hizmet -> Mutluluk artar
-            gameState.reputation += 0.1;
+            gameState.reputation += 0.03;
         }
 
-        // Radyasyon korkusu
         if(gameState.temp > gameState.maxSafeTemp * 0.8) {
-            gameState.reputation -= 1.0; // Panik!
+            gameState.reputation -= 0.1; 
         }
 
         gameState.reputation = Math.min(100, Math.max(0, gameState.reputation));
@@ -262,9 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateTicker(msg) {
         newsTicker.innerText = `>>> ${msg} <<<`;
-        // Animasyonu resetle
         newsTicker.style.animation = 'none';
-        newsTicker.offsetHeight; /* trigger reflow */
+        newsTicker.offsetHeight; 
         newsTicker.style.animation = 'ticker 15s linear infinite';
     }
 
@@ -282,9 +273,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if(gameState.money >= cost && !gameState.upgrades[type]) {
             gameState.money -= cost;
             gameState.upgrades[type] = true;
-            document.getElementById(`item-${type}`).style.opacity = "0.5";
-            document.getElementById(`item-${type}`).querySelector('button').innerText = "ALINDI";
-            document.getElementById(`item-${type}`).querySelector('button').disabled = true;
+            const item = document.getElementById(`item-${type}`);
+            if(item) {
+                item.style.opacity = "0.5";
+                item.querySelector('button').innerText = "ALINDI";
+                item.querySelector('button').disabled = true;
+            }
             
             if(type === 'containment') gameState.maxSafeTemp = 1600;
         }
@@ -309,9 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('end-message').innerText = msg;
     }
 
-    // --- UI Update ---
+    // --- UI Update (HATALI KISIM BURADAYDI, DÜZELTİLDİ) ---
     function updateUI() {
-        // Barlar
+        // Sıcaklık Barı
         let tPct = (gameState.temp / gameState.maxSafeTemp) * 100;
         tempBar.style.width = Math.min(tPct, 100) + '%';
         tempVal.innerText = Math.floor(gameState.temp) + "°C";
@@ -326,12 +320,18 @@ document.addEventListener('DOMContentLoaded', () => {
         fuelBar.style.width = gameState.fuelLevel + '%';
         fuelVal.innerText = Math.floor(gameState.fuelLevel) + '%';
 
-        // Sağlık Barları
-        turbineHealthBar.style.width = gameState.componentHealth.turbine + '%';
-        turbineHealthBar.firstElementChild.style.background = gameState.componentHealth.turbine > 50 ? '#00cc66' : 'red';
+        // --- DÜZELTİLEN KISIM BAŞLANGIÇ ---
+        // Sağlık barlarının genişliği ve rengi
+        if(turbineHealthBar) {
+            turbineHealthBar.style.width = gameState.componentHealth.turbine + '%';
+            turbineHealthBar.style.background = gameState.componentHealth.turbine > 50 ? '#00cc66' : 'red';
+        }
         
-        pumpHealthBar.style.width = gameState.componentHealth.pump + '%';
-        pumpHealthBar.firstElementChild.style.background = gameState.componentHealth.pump > 50 ? '#00cc66' : 'red';
+        if(pumpHealthBar) {
+            pumpHealthBar.style.width = gameState.componentHealth.pump + '%';
+            pumpHealthBar.style.background = gameState.componentHealth.pump > 50 ? '#00cc66' : 'red';
+        }
+        // --- DÜZELTİLEN KISIM BİTİŞ ---
 
         // Reputasyon
         repBarFill.style.width = gameState.reputation + '%';
@@ -359,7 +359,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.rods[1] = parseInt(rod2.value);
         gameState.rods[2] = parseInt(rod3.value);
         
-        // 100-val çünkü slider yukarı (0) = Açık
         rodDisplays[0].innerText = (100 - gameState.rods[0]) + '%';
         rodDisplays[1].innerText = (100 - gameState.rods[1]) + '%';
         rodDisplays[2].innerText = (100 - gameState.rods[2]) + '%';
