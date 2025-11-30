@@ -9,30 +9,11 @@
 <body>
 
     <div id="selection-screen" class="modal-overlay active">
-        <div class="modal-content text-center mission-modal">
-            <h1>OPERATÖR BRİFİNGİ</h1>
-            <hr>
-            <h3>GÖREVİNİZ: ŞEHRİN TÜM GÜCÜNÜ SAĞLAYIN</h3>
-            <div class="rules-box">
-                <p><strong>1. KAZANMA HEDEFİ:</strong> Reaktörü çalıştırarak tüm evlerin ışığını yakın ve bu gücü güvenle sürdürün (yaklaşık 1500 MW).</p>
-                <p><strong>2. KRİTİK DENGE:</strong> 1500 MW güce ulaştığınızda, çubuklar **özel bir KRİTİK DENGE** pozisyonunda değilse, dengesizlikten dolayı reaktör anında ısınacak ve eriyecektir (Hotspot).</p>
-                <p><strong>3. RİSK:</strong> Sıcaklık **1200°C**'yi geçerse çekirdek erimesi başlar.</p>
-            </div>
-            <p>Başlamak için yakıt türünü seçin:</p>
-            <div class="button-group">
-                <button id="uraniumBtn" class="choice-btn uranium">Uranyum-235</button>
-                <button id="plutoniumBtn" class="choice-btn plutonium">Plütonyum-239</button>
-            </div>
         </div>
-    </div>
 
     <div id="end-screen" class="modal-overlay">
-        <div class="modal-content text-center">
-            <h2 id="end-title">SONUÇ</h2>
-            <p id="end-message">Mesaj...</p>
-            <button onclick="location.reload()" class="choice-btn restart-btn">YENİDEN BAŞLAT</button>
         </div>
-    </div>
+
 
     <div id="game-container">
         <header>
@@ -41,6 +22,10 @@
                 <span id="fuel-status" class="badge">Sistem Beklemede</span>
             </div>
             <div class="header-right">
+                <div class="digital-readout">
+                    <span>HEDEF GÜÇ:</span> 
+                    <span id="target-power-digital" class="neon-text target">1000 MW</span>
+                </div>
                 <div class="digital-readout">
                     <span>ANLIK GÜÇ:</span>
                     <span id="power-digital" class="neon-text">0 MW</span>
@@ -74,6 +59,14 @@
                 
                 <div class="gauges">
                     <div class="gauge-box">
+                        <label>Yakıt Seviyesi (%)</label>
+                        <div class="meter-wrapper">
+                            <div id="fuel-bar" class="meter-fill green-fill"></div>
+                        </div>
+                        <span id="fuel-val">100%</span>
+                    </div>
+
+                    <div class="gauge-box">
                         <label>Çekirdek Isısı (°C)</label>
                         <div class="meter-wrapper">
                             <div id="temp-bar" class="meter-fill"></div>
@@ -81,6 +74,17 @@
                         <span id="temp-val">25°C</span>
                     </div>
                 </div>
+
+                <div class="rod-system">
+                    <p class="panel-label">SOĞUTMA & BAKIM</p>
+                    <div class="control-toggle">
+                        <label for="coolingSlider">Pompa Hızı:</label>
+                        <input type="range" id="coolingSlider" min="0" max="100" value="50" style="width: 70%;">
+                        <span id="cooling-val">50%</span>
+                    </div>
+                    <button id="refuel-btn" class="choice-btn restart-btn" disabled>YAKIT İKMALİ YAP (REAKTÖRÜ DURDUR)</button>
+                </div>
+
 
                 <div class="rod-system">
                     <p class="panel-label">KONTROL ÇUBUKLARI (KRİTİK HEDEF)</p>
@@ -114,12 +118,7 @@
     </div>
 
     <div id="infoModal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2 id="modal-title"></h2>
-            <p id="modal-text"></p>
         </div>
-    </div>
 
     <script src="script.js"></script>
 </body>
