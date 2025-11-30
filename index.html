@@ -9,11 +9,39 @@
 <body>
 
     <div id="selection-screen" class="modal-overlay active">
+        <div class="modal-content text-center">
+            <h1>NÜKLEER OPERATÖR: GÖREV BAŞLANGICI</h1>
+            <div class="rules-box">
+                <p><strong>GÖREV:</strong> Şehrin elektrik ihtiyacını (Load Profile) karşıla ve reaktörü patlatma.</p>
+                <p>⚠️ <strong>DİKKAT:</strong></p>
+                <ul>
+                    <li>Sıcaklığı 1200°C altında tut.</li>
+                    <li>Kontrol çubuklarını dengeli çek (Hotspot oluşmasın).</li>
+                    <li>Şebeke talebi değişkendir, takip et.</li>
+                </ul>
+            </div>
+            <h3>YAKIT TÜRÜNÜ SEÇ:</h3>
+            <button id="uraniumBtn" class="choice-btn uranium">URANYUM-235 (Standart - Kararlı)</button>
+            <br><br>
+            <button id="plutoniumBtn" class="choice-btn plutonium">PLÜTONYUM-239 (Yüksek Güç - Dengesiz)</button>
         </div>
+    </div>
 
     <div id="end-screen" class="modal-overlay">
+        <div class="modal-content text-center" style="border-top-color: red;">
+            <h1 id="end-title">OYUN BİTTİ</h1>
+            <p id="end-message" style="margin: 20px 0; font-size: 1.1rem;">Reaktör durumu kritik.</p>
+            <button class="choice-btn restart-btn" onclick="location.reload()">SİSTEMİ YENİDEN BAŞLAT</button>
         </div>
+    </div>
 
+    <div id="infoModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3 id="modal-title">Bilgi</h3>
+            <p id="modal-text">Detaylar...</p>
+        </div>
+    </div>
 
     <div id="game-container">
         <header>
@@ -43,13 +71,11 @@
                     <div class="info-point" data-info="turbin" style="top: 62%; left: 58%;">?</div>
                     <div class="info-point" data-info="su_kaynagi" style="top: 75%; left: 20%;">?</div>
                     <div class="info-point" data-info="yakit_deposu" style="top: 45%; left: 60%;">?</div>
-                    
                 </div>
                 
                 <div class="city-container">
                     <h3>ŞEHİR ŞEBEKESİ</h3>
-                    <div class="houses-grid" id="houses-grid">
-                        </div>
+                    <div class="houses-grid" id="houses-grid"></div>
                     <div class="grid-status">Şebeke Durumu: <span id="grid-percentage">0%</span></div>
                 </div>
             </div>
@@ -85,22 +111,21 @@
                     <button id="refuel-btn" class="choice-btn restart-btn" disabled>YAKIT İKMALİ YAP (REAKTÖRÜ DURDUR)</button>
                 </div>
 
-
                 <div class="rod-system">
                     <p class="panel-label">KONTROL ÇUBUKLARI (KRİTİK HEDEF)</p>
                     <div class="rod-group">
                         <div class="rod-slider">
-                            <input type="range" id="rod1" min="0" max="100" value="100" orient="vertical">
+                            <input type="range" id="rod1" min="0" max="100" value="100" class="vertical-range">
                             <label>ROD A</label>
                             <span id="val-rod1">100%</span>
                         </div>
                         <div class="rod-slider">
-                            <input type="range" id="rod2" min="0" max="100" value="100" orient="vertical">
+                            <input type="range" id="rod2" min="0" max="100" value="100" class="vertical-range">
                             <label>ROD B</label>
                             <span id="val-rod2">100%</span>
                         </div>
                         <div class="rod-slider">
-                            <input type="range" id="rod3" min="0" max="100" value="100" orient="vertical">
+                            <input type="range" id="rod3" min="0" max="100" value="100" class="vertical-range">
                             <label>ROD C</label>
                             <span id="val-rod3">100%</span>
                         </div>
@@ -116,9 +141,6 @@
             </div>
         </div>
     </div>
-
-    <div id="infoModal" class="modal-overlay">
-        </div>
 
     <script src="script.js"></script>
 </body>
