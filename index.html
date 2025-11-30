@@ -3,57 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nükleer Operatör v2.0</title>
+    <title>Nükleer Operatör v3.0: Tam Sürüm</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="selection-screen" class="modal-overlay active">
         <div class="modal-content text-center">
-            <h1>NÜKLEER OPERATÖR: GÖREV BAŞLANGICI</h1>
+            <h1>NÜKLEER OPERATÖR: BAŞMÜHENDİS</h1>
             <div class="rules-box">
-                <p><strong>YENİ GÖREV:</strong> Şehre elektrik ver, para kazan ve santralini geliştir.</p>
+                <p><strong>YENİ MEKANİKLER:</strong></p>
                 <ul>
-                    <li>⚡ <strong>Gelir:</strong> Üretilen her MW sana nakit kazandırır.</li>
-                    <li>🛠️ <strong>Market:</strong> Kazandığın parayla soğutma ve güvenlik sistemlerini güçlendir.</li>
-                    <li>⚠️ <strong>DİKKAT:</strong> Çekirdek erimesini önle!</li>
+                    <li>📢 <strong>Halk Desteği:</strong> Elektrik kesilirse halk isyan eder. %0 olursa kovulursun.</li>
+                    <li>🔧 <strong>Bakım:</strong> Pompalar ve Türbinler zamanla bozulur. Onları tamir et!</li>
+                    <li>💰 <strong>Bütçe Yönetimi:</strong> Paranı yakıt, tamir ve geliştirmeler arasında bölüştür.</li>
                 </ul>
             </div>
             <h3>YAKIT TÜRÜNÜ SEÇ:</h3>
-            <button id="uraniumBtn" class="choice-btn uranium">URANYUM-235 (Dengeli)</button>
+            <button id="uraniumBtn" class="choice-btn uranium">URANYUM-235 (Güvenli Başlangıç)</button>
             <br><br>
-            <button id="plutoniumBtn" class="choice-btn plutonium">PLÜTONYUM-239 (Riskli & Yüksek Gelir)</button>
+            <button id="plutoniumBtn" class="choice-btn plutonium">PLÜTONYUM-239 (Zor Mod)</button>
         </div>
     </div>
 
     <div id="end-screen" class="modal-overlay">
         <div class="modal-content text-center" style="border-top-color: red;">
             <h1 id="end-title">OYUN BİTTİ</h1>
-            <p id="end-message" style="margin: 20px 0; font-size: 1.1rem;">Reaktör durumu kritik.</p>
-            <button class="choice-btn restart-btn" onclick="location.reload()">SİSTEMİ YENİDEN BAŞLAT</button>
+            <p id="end-message" style="margin: 20px 0; font-size: 1.1rem;">...</p>
+            <button class="choice-btn restart-btn" onclick="location.reload()">YENİ OYUN</button>
         </div>
     </div>
 
     <div id="shopModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn shop-close">&times;</span>
-            <h3 style="color: #ffcc00;">SANTRAL GELİŞTİRMELERİ</h3>
+            <h3 style="color: #ffcc00;">AR-GE & GELİŞTİRME</h3>
             <div class="shop-grid">
                 <div class="shop-item" id="item-turbine">
-                    <h4>Gelişmiş Türbinler</h4>
-                    <p>Geliri %20 Artırır</p>
-                    <button class="buy-btn" onclick="buyUpgrade('turbine', 5000)">SATIN AL (5.000$)</button>
+                    <h4>Seramik Türbinler</h4>
+                    <p>Gelir +%25</p>
+                    <button class="buy-btn" onclick="buyUpgrade('turbine', 6000)">SATIN AL (6.000$)</button>
                 </div>
                 <div class="shop-item" id="item-cooling">
-                    <h4>Soğutma AI</h4>
-                    <p>Soğutma Verimi +%15</p>
-                    <button class="buy-btn" onclick="buyUpgrade('cooling', 8000)">SATIN AL (8.000$)</button>
+                    <h4>Sıvı Nitrojen Soğutma</h4>
+                    <p>Soğutma Gücü +%30</p>
+                    <button class="buy-btn" onclick="buyUpgrade('cooling', 9000)">SATIN AL (9.000$)</button>
                 </div>
                 <div class="shop-item" id="item-containment">
-                    <h4>Güçlendirilmiş Çekirdek</h4>
-                    <p>Max Isı +300°C</p>
-                    <button class="buy-btn" onclick="buyUpgrade('containment', 12000)">SATIN AL (12.000$)</button>
+                    <h4>Titanyum Muhafaza</h4>
+                    <p>Max Isı 1600°C</p>
+                    <button class="buy-btn" onclick="buyUpgrade('containment', 15000)">SATIN AL (15.000$)</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <header>
+            <div class="header-left">
+                <div style="font-size: 0.8rem; color: #aaa;">BAŞMÜHENDİS PANELİ</div>
+                <div class="money-display"><span id="money-val" style="color: #00ffcc;">0</span> $</div>
+            </div>
+            
+            <div class="header-center-reputation">
+                <div class="rep-label">HALK DESTEĞİ</div>
+                <div class="rep-bar-bg"><div id="rep-bar-fill" style="width: 100%;"></div></div>
+                <span id="rep-val">100%</span>
+            </div>
+
+            <div class="header-right">
+                <button id="open-shop-btn" class="shop-btn">MARKET 🛒</button>
+                <div class="digital-readout-small">
+                    <span>HEDEF:</span> <span id="target-power-digital" class="neon-text target">1000</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="visual-section">
+                <div class="news-ticker-container">
+                    <div class="news-ticker" id="news-ticker">SİSTEM ÇEVRİMİÇİ... REAKTÖR BAŞLATILIYOR...</div>
+                </div>
+
+                <div class="image-map-container">
+                    <div id="day-night-overlay" class="overlay-layer"></div>
+                    <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Santral">
+                    <div class="info-point" data-info="reaktor" style="top: 58%; left: 45%;">!</div>
+                </div>
+                
+                <div class="city-container">
+                    <div style="display:flex; justify-content:space-between;">
+                        <h3>ŞEHİR ŞEBEKESİ</h3>
+                        <span id="time-display" style="color:#aaa; font-family:monospace;">08:00</span>
+                    </div>
+                    <div class="houses-grid" id="houses-grid"></div>
+                    <div class="grid-status">
+                        Şebeke: <span id="grid-percentage">0%</span> | 
+                        Anlık: <span id="power-digital" style="color:#fff;">0 MW</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>SİSTEM KONTROLLERİ</h3>
+                
+                <div class="maintenance-panel">
+                    <div class="maint-item">
+                        <label>Türbin Sağlığı</label>
+                        <div class="health-bar"><div id="turbine-health-bar" style="width: 100%;"></div></div>
+                        <button id="repair-turbine-btn" class="repair-btn" onclick="repairComponent('turbine')">TAMİR ET (500$)</button>
+                    </div>
+                    <div class="maint-item">
+                        <label>Pompa Sağlığı</label>
+                        <div class="health-bar"><div id="pump-health-bar" style="width: 100%;"></div></div>
+                        <button id="repair-pump-btn" class="repair-btn" onclick="repairComponent('pump')">TAMİR ET (500$)</button>
+                    </div>
+                </div>
+
+                <div class="gauges-mini">
+                    <div class="gauge-box">
+                        <label>Çekirdek Isısı</label>
+                        <div class="meter-wrapper"><div id="temp-bar" class="meter-fill"></div></div>
+                        <span id="temp-val">25°C</span>
+                    </div>
+                    <div class="gauge-box">
+                        <label>Yakıt</label>
+                        <div class="meter-wrapper"><div id="fuel-bar" class="meter-fill green-fill"></div></div>
+                        <span id="fuel-val">100%</span>
+                    </div>
+                </div>
+
+                <div class="rod-system">
+                    <div class="control-toggle">
+                        <label>Soğutma Pompası:</label>
+                        <span id="cooling-val">50%</span>
+                    </div>
+                    <input type="range" id="coolingSlider" min="0" max="100" value="50" style="width: 100%;">
+                    
+                    <button id="refuel-btn" class="mini-btn" disabled>YAKIT İKMALİ (2.000$)</button>
+                </div>
+
+                <div class="rod-group">
+                    <div class="rod-slider"><input type="range" id="rod1" min="0" max="100" value="100" class="vertical-range"><label>A</label><span id="val-rod1">0</span></div>
+                    <div class="rod-slider"><input type="range" id="rod2" min="0" max="100" value="100" class="vertical-range"><label>B</label><span id="val-rod2">0</span></div>
+                    <div class="rod-slider"><input type="range" id="rod3" min="0" max="100" value="100" class="vertical-range"><label>C</label><span id="val-rod3">0</span></div>
+                </div>
+                
+                <p class="warning-text" id="stability-warning">Stabilite: Normal</p>
+                <button id="scram-btn" class="scram-btn">ACİL KAPAT (SCRAM)</button>
             </div>
         </div>
     </div>
@@ -63,114 +160,6 @@
             <span class="close-btn">&times;</span>
             <h3 id="modal-title">Bilgi</h3>
             <p id="modal-text">Detaylar...</p>
-        </div>
-    </div>
-
-    <div id="game-container">
-        <header>
-            <div class="header-left">
-                <h1>Nükleer Kontrol Odası</h1>
-                <span id="fuel-status" class="badge">Sistem Beklemede</span>
-            </div>
-            <div class="header-center">
-                <div class="money-display">
-                    BAKİYE: <span id="money-val" style="color: #00ffcc;">0</span> $
-                </div>
-                <button id="open-shop-btn" class="shop-btn">MARKET 🛒</button>
-            </div>
-            <div class="header-right">
-                <div class="digital-readout">
-                    <span>HEDEF:</span> 
-                    <span id="target-power-digital" class="neon-text target">1000 MW</span>
-                </div>
-                <div class="digital-readout">
-                    <span>ANLIK:</span>
-                    <span id="power-digital" class="neon-text">0 MW</span>
-                </div>
-            </div>
-        </header>
-
-        <div class="main-layout">
-            <div class="visual-section">
-                <div class="image-map-container">
-                    <div id="day-night-overlay" class="overlay-layer"></div> <img src="nukleer-santral-depo-photos-1536235.jpg" alt="Santral">
-                    
-                    <div class="info-point" data-info="sogutma" style="top: 38%; left: 32%;">?</div>
-                    <div class="info-point" data-info="reaktor" style="top: 58%; left: 45%;">?</div>
-                    <div class="info-point" data-info="turbin" style="top: 62%; left: 58%;">?</div>
-                    <div class="info-point" data-info="su_kaynagi" style="top: 75%; left: 20%;">?</div>
-                    <div class="info-point" data-info="yakit_deposu" style="top: 45%; left: 60%;">?</div>
-                </div>
-                
-                <div class="city-container">
-                    <div style="display:flex; justify-content:space-between;">
-                        <h3>ŞEHİR ŞEBEKESİ</h3>
-                        <span id="time-display" style="color:#aaa; font-family:monospace;">00:00</span>
-                    </div>
-                    <div class="houses-grid" id="houses-grid"></div>
-                    <div class="grid-status">Şebeke Durumu: <span id="grid-percentage">0%</span></div>
-                </div>
-            </div>
-
-            <div class="control-section">
-                <h3>KONTROL PANELİ</h3>
-                
-                <div class="gauges">
-                    <div class="gauge-box">
-                        <label>Yakıt Seviyesi (%)</label>
-                        <div class="meter-wrapper">
-                            <div id="fuel-bar" class="meter-fill green-fill"></div>
-                        </div>
-                        <span id="fuel-val">100%</span>
-                    </div>
-
-                    <div class="gauge-box">
-                        <label>Çekirdek Isısı (°C)</label>
-                        <div class="meter-wrapper">
-                            <div id="temp-bar" class="meter-fill"></div>
-                        </div>
-                        <span id="temp-val">25°C</span>
-                    </div>
-                </div>
-
-                <div class="rod-system">
-                    <p class="panel-label">SOĞUTMA SİSTEMİ</p>
-                    <div class="control-toggle">
-                        <label>Pompa Hızı:</label>
-                        <input type="range" id="coolingSlider" min="0" max="100" value="50" style="width: 70%;">
-                        <span id="cooling-val">50%</span>
-                    </div>
-                    <button id="refuel-btn" class="choice-btn restart-btn" disabled>YAKIT İKMALİ (2.000$)</button>
-                </div>
-
-                <div class="rod-system">
-                    <p class="panel-label">KONTROL ÇUBUKLARI</p>
-                    <div class="rod-group">
-                        <div class="rod-slider">
-                            <input type="range" id="rod1" min="0" max="100" value="100" class="vertical-range">
-                            <label>A</label>
-                            <span id="val-rod1">100</span>
-                        </div>
-                        <div class="rod-slider">
-                            <input type="range" id="rod2" min="0" max="100" value="100" class="vertical-range">
-                            <label>B</label>
-                            <span id="val-rod2">100</span>
-                        </div>
-                        <div class="rod-slider">
-                            <input type="range" id="rod3" min="0" max="100" value="100" class="vertical-range">
-                            <label>C</label>
-                            <span id="val-rod3">100</span>
-                        </div>
-                    </div>
-                    <p class="warning-text" id="stability-warning">Stabilite: Normal</p>
-                </div>
-
-                <div class="log-panel" id="log-content">
-                    <p>> Sistem başlatılıyor...</p>
-                </div>
-
-                <button id="scram-btn" class="scram-btn">SCRAM (ACİL DURDUR)</button>
-            </div>
         </div>
     </div>
 
