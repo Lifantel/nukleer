@@ -306,6 +306,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Temel şans düşük (%0.5), Sıcaklık 800 üstüyse artar (%2)
             let chance = 0.005;
             if (gameState.temp > 800) chance = 0.02;
+
+            }
+
+               // YENİ KRİTİK EŞİK: 1200°C üzeri
+            if (gameState.temp >= 1200) {
+                chance = 0.5; // KRİTİK RİSK: %50.0 (1200°C ve üzeri)
+            }
             
             if (Math.random() < chance) {
                 triggerRandomMalfunction();
