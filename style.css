@@ -42,7 +42,7 @@ h3 { color: #00ffcc; margin-top: 0; border-bottom: 1px solid #333; padding-botto
 .shop-btn:hover { background: #ffd633; }
 
 /* Market Grid */
-.shop-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
+.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
 .shop-item { background: #1e1e24; padding: 10px; border-radius: 5px; text-align: center; border: 1px solid #444; }
 .shop-item h4 { margin: 5px 0; font-size: 0.9rem; color: #00ffcc; }
 .shop-item p { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
@@ -158,3 +158,57 @@ input[type=range].vertical-range::-webkit-slider-thumb {
 }
 .scram-btn:active { transform: translateY(3px); box-shadow: none; }
 .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #aaa; }
+
+/* YENİ EKLENEN STİLLER: Arıza Sistemi */
+.malfunction-list {
+    margin-top: 10px;
+    min-height: 40px;
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.malfunction-item {
+    background: #3d0d1d; /* Koyu kırmızımsı arka plan */
+    border: 1px solid #ff3366;
+    padding: 8px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: blink-border 1.5s infinite;
+}
+
+.malfunction-info {
+    font-size: 0.75rem;
+    color: #ffb3c6;
+    font-weight: bold;
+}
+
+.repair-btn {
+    background: #ff3366;
+    border: none;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.repair-btn:hover {
+    background: #ff6685;
+}
+
+.repair-btn:active {
+    transform: scale(0.95);
+}
+
+@keyframes blink-border {
+    0% { border-color: #ff3366; box-shadow: 0 0 5px #ff3366; }
+    50% { border-color: #801a33; box-shadow: none; }
+    100% { border-color: #ff3366; box-shadow: 0 0 5px #ff3366; }
+}
