@@ -16,12 +16,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const powerDisplay = document.getElementById('power-digital');
     const targetPowerDisplay = document.getElementById('target-power-digital');
     const gridPercentage = document.getElementById('grid-percentage');
+    
+    // YENİ: Memnuniyet UI
+    const satisfactionVal = document.getElementById('satisfaction-val');
+    
     const fuelBar = document.getElementById('fuel-bar');
     const fuelVal = document.getElementById('fuel-val');
     const moneyVal = document.getElementById('money-val');
     const stabilityWarning = document.getElementById('stability-warning');
 
-    // YENİ UI: Arıza Sistemi
+    // Arıza Sistemi UI
     const malfunctionBar = document.getElementById('malfunction-bar');
     const malfunctionVal = document.getElementById('malfunction-val');
     const malfunctionList = document.getElementById('active-malfunctions-list');
@@ -59,14 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
         powerFactorBase: 2.2,
         maxSafeTemp: 1200, 
         gameOver: false,
-        // YENİ STATE DEĞİŞKENLERİ
-        malfunctionLevel: 0, // 0-100 arası
-        activeMalfunctions: [], // {id, name, cost, damage}
+        malfunctionLevel: 0, 
+        activeMalfunctions: [], 
+        // YENİ STATE: Halk Memnuniyeti
+        satisfaction: 100,
         upgrades: {
             turbine: false,
             cooling: false,
             containment: false,
-            maintenance: false // Yeni upgrade
+            maintenance: false,
+            pr: false // YENİ UPGRADE: Halkla İlişkiler
         }
     };
 
@@ -76,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const FUEL_CONSUMPTION_RATE = 0.003; 
     const REFUEL_COST = 2000;
 
-    // Arıza Tipleri (En az %15 hasar katkısı)
     const MALFUNCTION_TYPES = [
         { name: "Pompa Valfi Sıkışması", baseCost: 1500, damage: 15 },
         { name: "Türbin Dişlisi Kırığı", baseCost: 2500, damage: 20 },
@@ -85,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { name: "Ana Devre Yanığı", baseCost: 5000, damage: 35 }
     ];
 
-    // Yük Profili
     const LOAD_PROFILE = [
         { name: "GECE (Düşük Tüketim)", duration: 60, target: 800, overlay: "overlay-night", hourStart: 0 },
         { name: "SABAH (Yüksek Tüketim)", duration: 90, target: 1400, overlay: "overlay-morning", hourStart: 6 },
@@ -134,15 +138,16 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.maxSafeTemp = 1200;
         gameState.gameOver = false;
         
-        // Arıza Reset
         gameState.malfunctionLevel = 0;
         gameState.activeMalfunctions = [];
         updateMalfunctionUI();
 
-        gameState.upgrades = { turbine: false, cooling: false, containment: false, maintenance: false };
+        // YENİ: Memnuniyet Reset
+        gameState.satisfaction = 100;
+
+        gameState.upgrades = { turbine: false, cooling: false, containment: false, maintenance: false, pr: false };
         currentProfileIndex = 0;
 
-        // Reset UI Elements
         document.querySelectorAll('.shop-item').forEach(el => el.classList.remove('purchased'));
         document.querySelectorAll('.buy-btn').forEach(el => {
             el.disabled = false; 
@@ -182,13 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
             gameState.money -= cost;
             gameState.upgrades[type] = true;
             
-            // UI Güncelleme
             const item = document.getElementById(`item-${type}`);
             item.classList.add('purchased');
             item.querySelector('button').innerText = "SATIN ALINDI";
             item.querySelector('button').disabled = true;
 
-            // Etkileri Uygula
             if(type === 'containment') {
                 gameState.maxSafeTemp = 1500;
                 log("SİSTEM: Koruma kabı güçlendirildi.", false);
@@ -196,6 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 log("SİSTEM: Yapay Zeka soğutma aktif.", false);
             } else if(type === 'maintenance') {
                 log("SİSTEM: Acil Bakım Ekibi göreve hazır.", false);
+            } else if(type === 'pr') {
+                log("SİSTEM: Medya merkezi kuruldu. Halk tepkisi azaldı.", false);
             } else {
                 log("SİSTEM: Türbin verimliliği artırıldı.", false);
             }
@@ -208,13 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Arıza Yönetimi ---
     function triggerRandomMalfunction() {
         if (gameState.gameOver) return;
-        
-        // Maksimum hasara ulaşılmışsa ekleme yapma
         if (gameState.malfunctionLevel >= 100) return;
 
         const type = MALFUNCTION_TYPES[Math.floor(Math.random() * MALFUNCTION_TYPES.length)];
         
-        // Yeni bir arıza objesi oluştur
         const fault = {
             id: Date.now(),
             name: type.name,
@@ -226,20 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.malfunctionLevel = Math.min(100, gameState.malfunctionLevel + fault.damage);
 
         log(`ALARM: ${fault.name} tespit edildi! Hasar: +%${fault.damage}`, true);
-        
-        // UI'da göster
         updateMalfunctionUI();
     }
 
     function updateMalfunctionUI() {
-        // Barı güncelle
         malfunctionBar.style.width = `${gameState.malfunctionLevel}%`;
         malfunctionVal.innerText = `${gameState.malfunctionLevel}%`;
         
         if(gameState.malfunctionLevel > 80) malfunctionBar.style.backgroundColor = "red";
         else malfunctionBar.style.backgroundColor = "#ff3366";
 
-        // Listeyi güncelle
         malfunctionList.innerHTML = '';
         if (gameState.activeMalfunctions.length === 0) {
             malfunctionList.innerHTML = '<p style="color:#666; font-size:0.8rem; text-align:center;">Sistem Stabil...</p>';
@@ -250,7 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.className = 'malfunction-item';
             
-            // Masraf Hesapla (Maintenance upgrade varsa %50 indirim)
             let actualCost = fault.cost;
             if (gameState.upgrades.maintenance) actualCost = Math.floor(fault.cost / 2);
 
@@ -267,20 +264,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Window scope'una ekle ki HTML'den çağrılabilsin
     window.repairMalfunction = (id, cost, damage) => {
         if (gameState.money >= cost) {
             gameState.money -= cost;
-            
-            // Arızayı diziden çıkar
             gameState.activeMalfunctions = gameState.activeMalfunctions.filter(m => m.id !== id);
-            
-            // Hasarı düşür
             gameState.malfunctionLevel = Math.max(0, gameState.malfunctionLevel - damage);
-            
             log(`ONARIM: Arıza giderildi. Sistem rahatladı.`, false);
             updateMalfunctionUI();
-            updateUI(); // Para güncellensin
+            updateUI(); 
         } else {
             log(`YETERSİZ FON: Tamir için ${cost}$ gerekli!`, true);
         }
@@ -291,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!gameState.active || gameState.gameOver) return;
         loopCount++;
 
-        // 1. Zaman ve Profil
+        // 1. Zamanlayıcı İşlemleri (Saniyede bir)
         if (loopCount % 60 === 0) { 
             gameState.time++;
             
@@ -302,22 +293,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameState.money += earnings;
             }
 
-            // Arıza Tetikleme Şansı (Her saniye)
-            // Temel şans düşük (%0.5), Sıcaklık 800 üstüyse artar (%2)
+            // Arıza Tetikleme Şansı
             let chance = 0.005;
             if (gameState.temp > 800) chance = 0.02;
-
-            }
-
-               // YENİ KRİTİK EŞİK: 1200°C üzeri
-            if (gameState.temp >= 1200) {
-                chance = 0.5; // KRİTİK RİSK: %50.0 (1200°C ve üzeri)
-            }
-            
             if (Math.random() < chance) {
                 triggerRandomMalfunction();
             }
 
+            // --- YENİ: Halk Memnuniyeti Hesaplama ---
+            let gridPct = Math.min(100, Math.floor((gameState.power / gameState.targetPower) * 100));
+            
+            if (gridPct >= 100) {
+                // Şebeke tam doluysa memnuniyet artar
+                gameState.satisfaction += 1;
+            } else {
+                // Şebeke eksikse düşer.
+                // 90% ise fark 10 -> -1 düşer
+                // 80% ise fark 20 -> -2 düşer
+                let dropAmount = (100 - gridPct) / 10;
+                
+                // Medya & PR upgrade varsa düşüş %50 azalır
+                if (gameState.upgrades.pr) {
+                    dropAmount *= 0.5;
+                }
+                
+                gameState.satisfaction -= dropAmount;
+            }
+
+            // Sınırlar (0 - 100 arası)
+            if (gameState.satisfaction > 100) gameState.satisfaction = 100;
+            if (gameState.satisfaction < 0) gameState.satisfaction = 0;
+
+            // Zaman İlerletme
             const currentProfile = LOAD_PROFILE[currentProfileIndex];
             if (gameState.time > currentProfile.duration) {
                 gameState.time = 0;
@@ -391,6 +398,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameState.malfunctionLevel >= 100) {
             endGame(false, "SİSTEM ÇÖKTÜ! Kritik arızalar nedeniyle kontrol kaybedildi.");
         }
+
+        // YENİ: Halk Memnuniyeti Kontrolü
+        if (gameState.satisfaction <= 0) {
+            endGame(false, "HALK AYAKLANMASI! Şehir elektriksiz kaldığı için isyan çıktı.");
+        }
     }
 
     function updateUI() {
@@ -423,6 +435,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let gridPct = Math.min(100, Math.floor((gameState.power / gameState.targetPower) * 100));
         gridPercentage.innerText = `${gridPct}%`;
         gridPercentage.style.color = gridPct >= 100 ? '#00ffcc' : (gridPct < 50 ? 'red' : 'white');
+
+        // YENİ: Memnuniyet UI Güncelleme
+        satisfactionVal.innerText = `${Math.floor(gameState.satisfaction)}%`;
+        if(gameState.satisfaction > 70) satisfactionVal.style.color = "#00ffcc";
+        else if(gameState.satisfaction > 30) satisfactionVal.style.color = "#ffcc00";
+        else satisfactionVal.style.color = "#ff0000";
     }
 
     function endGame(victory, msg) {
@@ -433,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const message = document.getElementById('end-message');
         endScreen.classList.add('active');
         
-        title.innerText = victory ? "GÖREV BAŞARILI" : "SİSTEM KAPANDI";
+        title.innerText = victory ? "GÖREV BAŞARILI" : "OYUN BİTTİ";
         title.style.color = victory ? "#00cc66" : "red";
         message.innerText = msg;
     }

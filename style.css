@@ -112,6 +112,7 @@ header {
 }
 .house.lit { background: #ffcc00; opacity: 1; box-shadow: 0 0 10px #ffcc00; }
 .grid-status { margin-top: 5px; text-align: right; font-size: 0.8rem; color: #888; }
+.satisfaction-status { margin-top: 3px; text-align: right; font-size: 0.8rem; color: #bbb; } /* YENİ */
 
 /* Kontroller */
 .gauges { margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
@@ -159,7 +160,7 @@ input[type=range].vertical-range::-webkit-slider-thumb {
 .scram-btn:active { transform: translateY(3px); box-shadow: none; }
 .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #aaa; }
 
-/* YENİ EKLENEN STİLLER: Arıza Sistemi */
+/* Arıza Sistemi */
 .malfunction-list {
     margin-top: 10px;
     min-height: 40px;
