@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nükleer Operatör v2.2</title>
+    <title>Nükleer Operatör v2.3 - Borç Sistemi</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,9 +15,9 @@
                 <p><strong>YENİ GÖREV:</strong> Şehri mutlu et, elektriği kesme!</p>
                 <ul>
                     <li>⚡ <strong>Gelir:</strong> Üretilen her MW sana nakit kazandırır.</li>
+                    <li>💸 <strong>Banka:</strong> Nakit sıkışırsa borç al, ama süresinde öde!</li>
                     <li>😡 <strong>Halk Memnuniyeti:</strong> Elektrik kesilirse halk isyan eder (%0 = Oyun Biter).</li>
                     <li>🛠️ <strong>Arızalar:</strong> Sistem hasarını kontrol et.</li>
-                    <li><strong>Grup: </strong>Nuri İl, Mehmet Fatih Gültekin, Abdulhadi Abuş, Kerem Kaan Yabaneri</li>
                 </ul>
             </div>
             <h3>YAKIT TÜRÜNÜ SEÇ:</h3>
@@ -32,6 +32,41 @@
             <h1 id="end-title">OYUN BİTTİ</h1>
             <p id="end-message" style="margin: 20px 0; font-size: 1.1rem;">Reaktör durumu kritik.</p>
             <button class="choice-btn restart-btn" onclick="location.reload()">SİSTEMİ YENİDEN BAŞLAT</button>
+        </div>
+    </div>
+
+    <div id="bankModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn bank-close">&times;</span>
+            <h3 style="color: #ff3333;">KARA BORSA BANKASI</h3>
+            <p style="text-align:center; color:#aaa; font-size:0.9rem;">Dikkat: Borcunu zamanında ödemezsen santrale el koyarız.</p>
+            
+            <div id="active-loan-info" style="display:none; text-align:center; margin-bottom:15px; background:#3d0d1d; padding:10px; border:1px solid red;">
+                <h4 style="color:red; margin:0;">AKTİF BORÇ: <span id="current-debt-val">0</span>$</h4>
+                <p style="margin:5px 0;">Kalan Süre: <span id="loan-timer-modal" style="color:white; font-weight:bold;">0</span> sn</p>
+                <button id="repay-btn" class="choice-btn restart-btn" style="background:#ff3333;">BORCU ÖDE</button>
+            </div>
+
+            <div id="loan-options" class="shop-grid">
+                <div class="shop-item">
+                    <h4>KÜÇÜK PAKET</h4>
+                    <p>Al: 1.200$ | Öde: +Faiz</p>
+                    <p style="color:#ffcc00;">Süre: 72 Saniye</p>
+                    <button class="buy-btn" onclick="takeLoan(1200, 72)">ÇEK (1.200$)</button>
+                </div>
+                <div class="shop-item">
+                    <h4>ORTA PAKET</h4>
+                    <p>Al: 2.500$ | Öde: +Faiz</p>
+                    <p style="color:#ffcc00;">Süre: 2.5 Dakika</p>
+                    <button class="buy-btn" onclick="takeLoan(2500, 150)">ÇEK (2.500$)</button>
+                </div>
+                <div class="shop-item">
+                    <h4>BÜYÜK PAKET</h4>
+                    <p>Al: 5.000$ | Öde: +Faiz</p>
+                    <p style="color:#ffcc00;">Süre: 5 Dakika</p>
+                    <button class="buy-btn" onclick="takeLoan(5000, 300)">ÇEK (5.000$)</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -50,10 +85,10 @@
                     <p>Soğutma Verimi +%15</p>
                     <button class="buy-btn" onclick="buyUpgrade('cooling', 8000)">SATIN AL (8.000$)</button>
                 </div>
-                <div class="shop-item" id="item-containment">
-                    <h4>Güçlendirilmiş Çekirdek</h4>
-                    <p>Max Isı +300°C</p>
-                    <button class="buy-btn" onclick="buyUpgrade('containment', 12000)">SATIN AL (12.000$)</button>
+                <div class="shop-item" id="item-banker">
+                    <h4>Bankacı Tanıdık</h4>
+                    <p>Kredi Faizi 1000$ -> 250$ iner</p>
+                    <button class="buy-btn" onclick="buyUpgrade('banker', 6000)">SATIN AL (6.000$)</button>
                 </div>
                 <div class="shop-item" id="item-maintenance">
                     <h4>Acil Müdahale Ekibi</h4>
@@ -87,9 +122,14 @@
                 <div class="money-display">
                     BAKİYE: <span id="money-val" style="color: #00ffcc;">0</span> $
                 </div>
+                <button id="open-bank-btn" class="shop-btn" style="background-color: #ff3333; color: white;">BANKA 🏦</button>
                 <button id="open-shop-btn" class="shop-btn">MARKET 🛒</button>
             </div>
             <div class="header-right">
+                <div class="digital-readout" id="debt-readout" style="display: none;">
+                    <span style="color:red; font-weight:bold;">ÖDEME SÜRESİ:</span> 
+                    <span id="debt-timer-display" class="neon-text" style="color: red; text-shadow: 0 0 5px red;">00:00</span>
+                </div>
                 <div class="digital-readout">
                     <span>HEDEF:</span> 
                     <span id="target-power-digital" class="neon-text target">1000 MW</span>

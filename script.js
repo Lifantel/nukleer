@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectionScreen = document.getElementById('selection-screen');
     const endScreen = document.getElementById('end-screen');
     const shopModal = document.getElementById('shopModal');
+    const bankModal = document.getElementById('bankModal'); // YENİ
     const gameContainer = document.getElementById('game-container');
     const logContent = document.getElementById('log-content');
     const housesGrid = document.getElementById('houses-grid');
@@ -16,14 +17,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const powerDisplay = document.getElementById('power-digital');
     const targetPowerDisplay = document.getElementById('target-power-digital');
     const gridPercentage = document.getElementById('grid-percentage');
-    
-    // YENİ: Memnuniyet UI
     const satisfactionVal = document.getElementById('satisfaction-val');
     
     const fuelBar = document.getElementById('fuel-bar');
     const fuelVal = document.getElementById('fuel-val');
     const moneyVal = document.getElementById('money-val');
     const stabilityWarning = document.getElementById('stability-warning');
+
+    // Borç UI (YENİ)
+    const debtReadout = document.getElementById('debt-readout');
+    const debtTimerDisplay = document.getElementById('debt-timer-display');
+    const activeLoanInfo = document.getElementById('active-loan-info');
+    const loanOptionsDiv = document.getElementById('loan-options');
+    const currentDebtVal = document.getElementById('current-debt-val');
+    const loanTimerModal = document.getElementById('loan-timer-modal');
+    const repayBtn = document.getElementById('repay-btn');
 
     // Arıza Sistemi UI
     const malfunctionBar = document.getElementById('malfunction-bar');
@@ -45,6 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const refuelBtn = document.getElementById('refuel-btn');
     const openShopBtn = document.getElementById('open-shop-btn');
     const closeShopBtn = document.querySelector('.shop-close');
+    
+    // YENİ BUTONLAR
+    const openBankBtn = document.getElementById('open-bank-btn');
+    const closeBankBtn = document.querySelector('.bank-close');
 
     // --- Oyun Durumu ---
     let gameState = {
@@ -65,14 +77,21 @@ document.addEventListener('DOMContentLoaded', () => {
         gameOver: false,
         malfunctionLevel: 0, 
         activeMalfunctions: [], 
-        // YENİ STATE: Halk Memnuniyeti
         satisfaction: 100,
+        // YENİ: Borç Sistemi State
+        loan: {
+            active: false,
+            amount: 0,
+            timer: 0, // saniye cinsinden
+            maxTime: 0
+        },
         upgrades: {
             turbine: false,
             cooling: false,
             containment: false,
             maintenance: false,
-            pr: false // YENİ UPGRADE: Halkla İlişkiler
+            pr: false,
+            banker: false // YENİ UPGRADE
         }
     };
 
@@ -81,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_TEMP_FROM_RODS = 1800; 
     const FUEL_CONSUMPTION_RATE = 0.003; 
     const REFUEL_COST = 2000;
+    const BASE_INTEREST = 1000; // Sabit Faiz
 
     const MALFUNCTION_TYPES = [
         { name: "Pompa Valfi Sıkışması", baseCost: 1500, damage: 15 },
@@ -140,12 +160,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         gameState.malfunctionLevel = 0;
         gameState.activeMalfunctions = [];
-        updateMalfunctionUI();
-
-        // YENİ: Memnuniyet Reset
         gameState.satisfaction = 100;
 
-        gameState.upgrades = { turbine: false, cooling: false, containment: false, maintenance: false, pr: false };
+        // Borç Reset
+        gameState.loan = { active: false, amount: 0, timer: 0, maxTime: 0 };
+        debtReadout.style.display = 'none';
+
+        gameState.upgrades = { turbine: false, cooling: false, containment: false, maintenance: false, pr: false, banker: false };
         currentProfileIndex = 0;
 
         document.querySelectorAll('.shop-item').forEach(el => el.classList.remove('purchased'));
@@ -181,7 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isInitial) log(`YENİ VARDİYA: ${profile.name}`, true);
     }
 
-    // Market Fonksiyonu
+    // --- Market & Borç Fonksiyonları ---
+
     window.buyUpgrade = (type, cost) => {
         if(gameState.money >= cost && !gameState.upgrades[type]) {
             gameState.money -= cost;
@@ -200,7 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if(type === 'maintenance') {
                 log("SİSTEM: Acil Bakım Ekibi göreve hazır.", false);
             } else if(type === 'pr') {
-                log("SİSTEM: Medya merkezi kuruldu. Halk tepkisi azaldı.", false);
+                log("SİSTEM: Medya merkezi kuruldu.", false);
+            } else if(type === 'banker') {
+                log("ANLAŞMA: Bankacı ile anlaşıldı. Faizler düşük.", false);
             } else {
                 log("SİSTEM: Türbin verimliliği artırıldı.", false);
             }
@@ -209,6 +233,63 @@ document.addEventListener('DOMContentLoaded', () => {
             if(gameState.money < cost) alert("Yetersiz bakiye!");
         }
     };
+
+    // YENİ: Borç Alma
+    window.takeLoan = (amount, duration) => {
+        if(gameState.loan.active) {
+            alert("Zaten aktif bir borcun var! Önce onu öde.");
+            return;
+        }
+
+        let interest = BASE_INTEREST;
+        if(gameState.upgrades.banker) interest = 250; // Bankacı upgrade varsa faiz düşer
+
+        gameState.money += amount;
+        gameState.loan.active = true;
+        gameState.loan.amount = amount + interest;
+        gameState.loan.timer = duration;
+        gameState.loan.maxTime = duration;
+
+        log(`BANKA: ${amount}$ kredi çekildi. Geri ödeme: ${gameState.loan.amount}$`, true);
+        
+        bankModal.classList.remove('active');
+        updateBankUI();
+        updateUI();
+    };
+
+    repayBtn.addEventListener('click', () => {
+        if(gameState.money >= gameState.loan.amount) {
+            gameState.money -= gameState.loan.amount;
+            gameState.loan.active = false;
+            gameState.loan.amount = 0;
+            gameState.loan.timer = 0;
+            log("BANKA: Borç başarıyla ödendi. Temizsin.", false);
+            updateBankUI();
+            updateUI();
+        } else {
+            log(`BANKA: Yetersiz bakiye! ${gameState.loan.amount}$ gerekli.`, true);
+        }
+    });
+
+    function updateBankUI() {
+        if(gameState.loan.active) {
+            activeLoanInfo.style.display = 'block';
+            loanOptionsDiv.style.display = 'none';
+            debtReadout.style.display = 'block';
+            
+            currentDebtVal.innerText = gameState.loan.amount;
+            loanTimerModal.innerText = gameState.loan.timer;
+            
+            let minutes = Math.floor(gameState.loan.timer / 60);
+            let seconds = gameState.loan.timer % 60;
+            debtTimerDisplay.innerText = `${minutes}:${seconds < 10 ? '0'+seconds : seconds}`;
+
+        } else {
+            activeLoanInfo.style.display = 'none';
+            loanOptionsDiv.style.display = 'grid';
+            debtReadout.style.display = 'none';
+        }
+    }
 
     // --- Arıza Yönetimi ---
     function triggerRandomMalfunction() {
@@ -286,6 +367,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loopCount % 60 === 0) { 
             gameState.time++;
             
+            // Borç Sayacı Kontrolü
+            if(gameState.loan.active) {
+                gameState.loan.timer--;
+                updateBankUI(); // Sayacı güncelle
+                if(gameState.loan.timer <= 10) {
+                    debtTimerDisplay.style.color = (gameState.loan.timer % 2 === 0) ? "red" : "yellow"; // Son 10sn yanıp sönme
+                }
+            }
+
             // Para Kazanma
             if(gameState.power > 0) {
                 let earnings = gameState.power * 0.05;
@@ -300,27 +390,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 triggerRandomMalfunction();
             }
 
-            // --- YENİ: Halk Memnuniyeti Hesaplama ---
+            // Memnuniyet Hesaplama
             let gridPct = Math.min(100, Math.floor((gameState.power / gameState.targetPower) * 100));
             
             if (gridPct >= 100) {
-                // Şebeke tam doluysa memnuniyet artar
                 gameState.satisfaction += 1;
             } else {
-                // Şebeke eksikse düşer.
-                // 90% ise fark 10 -> -1 düşer
-                // 80% ise fark 20 -> -2 düşer
                 let dropAmount = (100 - gridPct) / 10;
-                
-                // Medya & PR upgrade varsa düşüş %50 azalır
-                if (gameState.upgrades.pr) {
-                    dropAmount *= 0.5;
-                }
-                
+                if (gameState.upgrades.pr) dropAmount *= 0.5;
                 gameState.satisfaction -= dropAmount;
             }
-
-            // Sınırlar (0 - 100 arası)
             if (gameState.satisfaction > 100) gameState.satisfaction = 100;
             if (gameState.satisfaction < 0) gameState.satisfaction = 0;
 
@@ -399,9 +478,14 @@ document.addEventListener('DOMContentLoaded', () => {
             endGame(false, "SİSTEM ÇÖKTÜ! Kritik arızalar nedeniyle kontrol kaybedildi.");
         }
 
-        // YENİ: Halk Memnuniyeti Kontrolü
+        // Halk Memnuniyeti Kontrolü
         if (gameState.satisfaction <= 0) {
             endGame(false, "HALK AYAKLANMASI! Şehir elektriksiz kaldığı için isyan çıktı.");
+        }
+
+        // YENİ: Borç Süresi Kontrolü
+        if (gameState.loan.active && gameState.loan.timer <= 0) {
+            endGame(false, "İFLAS! Borcunu ödeyemedin, banka santrale el koydu.");
         }
     }
 
@@ -436,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gridPercentage.innerText = `${gridPct}%`;
         gridPercentage.style.color = gridPct >= 100 ? '#00ffcc' : (gridPct < 50 ? 'red' : 'white');
 
-        // YENİ: Memnuniyet UI Güncelleme
         satisfactionVal.innerText = `${Math.floor(gameState.satisfaction)}%`;
         if(gameState.satisfaction > 70) satisfactionVal.style.color = "#00ffcc";
         else if(gameState.satisfaction > 30) satisfactionVal.style.color = "#ffcc00";
@@ -500,6 +583,13 @@ document.addEventListener('DOMContentLoaded', () => {
     openShopBtn.addEventListener('click', () => shopModal.classList.add('active'));
     closeShopBtn.addEventListener('click', () => shopModal.classList.remove('active'));
 
+    // YENİ BANKA EVENTLERİ
+    openBankBtn.addEventListener('click', () => {
+        updateBankUI(); // Modal açılmadan güncel durumu işle
+        bankModal.classList.add('active');
+    });
+    closeBankBtn.addEventListener('click', () => bankModal.classList.remove('active'));
+
     const infoPoints = document.querySelectorAll('.info-point');
     const modal = document.getElementById('infoModal');
     const infoClose = modal.querySelector('.close-btn');
@@ -529,5 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.onclick = (e) => {
         if(e.target == modal) modal.classList.remove('active');
         if(e.target == shopModal) shopModal.classList.remove('active');
+        if(e.target == bankModal) bankModal.classList.remove('active');
     };
 });
