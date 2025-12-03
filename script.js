@@ -161,11 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.malfunctionLevel = 0;
         gameState.activeMalfunctions = [];
         gameState.satisfaction = 100;
-        // window.startGame fonksiyonunun içindeki reset bölümüne ekle:
-gameState.totalXP = 0;         // Toplam üretilen enerji
-gameState.level = 1;           // Oyuncu seviyesi
-gameState.nextLevelXP = 5000;  // Bir sonraki seviye için gereken XP
-gameState.claimedLevels = [];  // Alınan ödülleri takip eder
+
+        // Borç Reset
         gameState.loan = { active: false, amount: 0, timer: 0, maxTime: 0 };
         debtReadout.style.display = 'none';
 
@@ -367,21 +364,7 @@ gameState.claimedLevels = [];  // Alınan ödülleri takip eder
         loopCount++;
 
         // 1. Zamanlayıcı İşlemleri (Saniyede bir)
-        if (// gameLoop fonksiyonu içinde, "1. Zamanlayıcı İşlemleri" altına ekle:
-if (loopCount % 60 === 0) { 
-    // ... mevcut kodlar ...
-
-    // --- YENİ KOD BAŞLANGICI ---
-    // Eğer elektrik üretiyorsan, XP kazan
-    if(gameState.power > 0) {
-        // Üretilen her MW puana eklenir
-        gameState.totalXP += gameState.power;
-        checkLevelProgress(); // Seviye kontrolü yap
-    }
-    // --- YENİ KOD BİTİŞİ ---
-
-    // ... mevcut kodlar devam ediyor ...
-}) { 
+        if (loopCount % 60 === 0) { 
             gameState.time++;
             
             // Borç Sayacı Kontrolü
@@ -638,38 +621,4 @@ if (loopCount % 60 === 0) {
         if(e.target == shopModal) shopModal.classList.remove('active');
         if(e.target == bankModal) bankModal.classList.remove('active');
     };
-});// --- SEVİYE VE ÖDÜL SİSTEMİ ---
-function checkLevelProgress() {
-    // UI Güncelleme
-    document.getElementById('level-val').innerText = gameState.level;
-    document.getElementById('xp-val').innerText = Math.floor(gameState.totalXP).toLocaleString();
-
-    // Seviye Tanımları (Hedef XP ve Ödül Miktarı)
-    const levels = [
-        { lvl: 2, target: 5000, reward: 2000, msg: "Acemi Operatör! (Ödül: 2.000$)" },
-        { lvl: 3, target: 15000, reward: 5000, msg: "Usta Şef! (Ödül: 5.000$)" },
-        { lvl: 4, target: 40000, reward: 15000, msg: "Santral Müdürü! (Ödül: 15.000$)" },
-        { lvl: 5, target: 100000, reward: 50000, msg: "Enerji Baronu! (Ödül: 50.000$)" }
-    ];
-
-    levels.forEach(milestone => {
-        // Eğer XP hedefe ulaştıysa VE bu seviye daha önce alınmadıysa
-        if (gameState.totalXP >= milestone.target && !gameState.claimedLevels.includes(milestone.lvl)) {
-            
-            // 1. Ödülü ver
-            gameState.money += milestone.reward;
-            
-            // 2. Seviyeyi artır
-            gameState.level = milestone.lvl;
-            
-            // 3. Listeye 'alındı' olarak işaretle (Tekrar almayı engelle)
-            gameState.claimedLevels.push(milestone.lvl);
-            
-            // 4. Bildirim yap
-            log(`TEBRİKLER! Seviye ${milestone.lvl}: ${milestone.msg}`, false); // Yeşil mesaj
-            alert(`SEVİYE ATLADIN!\n\nYeni Seviye: ${milestone.lvl}\nHesaba Yatan: ${milestone.reward}$`);
-            
-            updateUI(); // Bakiyeyi güncelle
-        }
-    });
-}
+});
